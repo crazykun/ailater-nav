@@ -185,12 +185,16 @@ func (r *SiteRepository) GetSearchSuggestions(query string, limit int) ([]string
 
 	searchPattern := "%" + query + "%"
 	rows, err := r.db.Query(`
-		SELECT DISTINCT name FROM sites 
-		WHERE deleted = 0 AND (name LIKE ? OR description LIKE ? OR id IN (
-			SELECT st.site_id FROM site_tags st JOIN tags t ON st.tag_id = t.id 
-			WHERE t.name LIKE ?
-		))
-		ORDER BY rating DESC, visits DESC 
+		SELECT DISTINCT name
+		FROM (
+			SELECT name, rating, visits
+			FROM sites
+			WHERE deleted = 0 AND (name LIKE ? OR description LIKE ? OR id IN (
+				SELECT st.site_id FROM site_tags st JOIN tags t ON st.tag_id = t.id
+				WHERE t.name LIKE ?
+			))
+			ORDER BY rating DESC, visits DESC
+		) AS ranked_sites
 		LIMIT ?
 	`, searchPattern, searchPattern, searchPattern, limit)
 	if err != nil {

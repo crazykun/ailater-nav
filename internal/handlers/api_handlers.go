@@ -3,6 +3,7 @@ package handlers
 import (
 	"ai-later-nav/internal/models"
 	"ai-later-nav/internal/services"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -54,6 +55,7 @@ func (h *APIHandler) SearchSuggestions(c *gin.Context) {
 
 	suggestions, err := h.siteService.GetSearchSuggestions(query, 5)
 	if err != nil {
+		log.Printf("GetSearchSuggestions error: %v", err)
 		c.HTML(http.StatusOK, "partials/suggestions.html", gin.H{
 			"suggestions": []string{},
 		})

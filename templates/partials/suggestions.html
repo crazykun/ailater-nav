@@ -1,4 +1,5 @@
 {{ define "partials/suggestions.html" }}
+{{ if .suggestions }}
 {{ range .suggestions }}
 <div class="px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors"
      hx-get="/api/search?q={{ . }}"
@@ -13,9 +14,5 @@
     </div>
 </div>
 {{ end }}
-{{ if not .suggestions }}
-<div class="px-4 py-3 text-gray-500 dark:text-gray-400 text-sm">
-    没有找到相关建议
-</div>
 {{ end }}
 {{ end }}
