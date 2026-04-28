@@ -339,7 +339,11 @@ func (r *SiteRepository) GetAllSitesStats() ([]models.SiteStats, error) {
 		SELECT 
 			site_id,
 			COUNT(*) as pv,
-			COUNT(DISTINCT ip) as uv
+			COUNT(DISTINCT ip) as uv,
+			SUM(CASE WHEN DATE(visited_at) = CURDATE() THEN 1 ELSE 0 END) as today_pv,
+			COUNT(DISTINCT CASE WHEN DATE(visited_at) = CURDATE() THEN ip END) as today_uv,
+			SUM(CASE WHEN visited_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) as week_pv,
+			COUNT(DISTINCT CASE WHEN visited_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) THEN ip END) as week_uv
 		FROM visits 
 		GROUP BY site_id
 	`)
@@ -351,7 +355,7 @@ func (r *SiteRepository) GetAllSitesStats() ([]models.SiteStats, error) {
 	var stats []models.SiteStats
 	for rows.Next() {
 		var s models.SiteStats
-		if err := rows.Scan(&s.SiteID, &s.PV, &s.UV); err != nil {
+		if err := rows.Scan(&s.SiteID, &s.PV, &s.UV, &s.TodayPV, &s.TodayUV, &s.WeekPV, &s.WeekUV); err != nil {
 			return nil, fmt.Errorf("scan stats: %w", err)
 		}
 		stats = append(stats, s)

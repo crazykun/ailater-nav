@@ -48,3 +48,23 @@ func TestLoginTemplateDoesNotRenderRegisterContent(t *testing.T) {
 		t.Fatalf("login.html did not render login content: %s", html)
 	}
 }
+
+func TestAdminIndexTemplateRendersFromSharedTemplateSet(t *testing.T) {
+	tmpl := web.BuildSharedTemplates(os.DirFS("../templates"))
+
+	var out bytes.Buffer
+	err := tmpl.ExecuteTemplate(&out, "admin-index.html", map[string]any{
+		"username":     "admin",
+		"siteCount":    12,
+		"userCount":    3,
+		"adminSection": "dashboard",
+	})
+	if err != nil {
+		t.Fatalf("ExecuteTemplate failed: %v", err)
+	}
+
+	html := out.String()
+	if !strings.Contains(html, "仪表盘") {
+		t.Fatalf("admin-index.html did not render dashboard content: %s", html)
+	}
+}
