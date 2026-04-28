@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"ai-later-nav/internal/models"
 	"ai-later-nav/internal/services"
 	"github.com/gin-gonic/gin"
 )
@@ -27,6 +28,22 @@ func (h *PageHandler) renderPage(c *gin.Context, name string, data gin.H) error 
 	tmpl, ok := h.pageTemplates[name]
 	if !ok {
 		return errors.New("page template not found: " + name)
+	}
+
+	if data == nil {
+		data = gin.H{}
+	}
+	if v, exists := c.Get("Copyright"); exists {
+		data["Copyright"] = v
+	}
+	if v, exists := c.Get("SiteName"); exists {
+		data["SiteName"] = v
+	}
+	if v, exists := c.Get("isLoggedIn"); exists {
+		data["isLoggedIn"] = v
+	}
+	if v, exists := c.Get("username"); exists {
+		data["username"] = v
 	}
 
 	var buf bytes.Buffer
@@ -124,12 +141,36 @@ func (h *PageHandler) UserDashboard(c *gin.Context) {
 
 	favoriteIDs, _ := userService.GetFavoriteIDs(userID)
 
+	var favoriteSites []models.SiteDisplay
+	if len(favoriteIDs) > 0 {
+		favoriteSites, _ = h.siteService.GetByIDs(favoriteIDs)
+	}
+
 	copyright, _ := c.Get("Copyright")
 	if err := h.renderPage(c, "dashboard.html", gin.H{
-		"favoriteIDs": favoriteIDs,
-		"Copyright":   copyright,
-		"isLoggedIn":  true,
-		"username":    c.GetString("username"),
+		"favoriteIDs":   favoriteIDs,
+		"favoriteSites": favoriteSites,
+		"Copyright":     copyright,
+		"isLoggedIn":    true,
+		"username":      c.GetString("username"),
+	}); err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{
+			"error": "页面渲染失败",
+		})
+	}
+}
+
+func (h *PageHandler) SetupPage(c *gin.Context) {
+	userService := services.NewUserService()
+	hasUser, _ := userService.HasAnyUser()
+	if hasUser {
+		c.Redirect(http.StatusFound, "/")
+		return
+	}
+
+	copyright, _ := c.Get("Copyright")
+	if err := h.renderPage(c, "setup.html", gin.H{
+		"Copyright": copyright,
 	}); err != nil {
 		c.HTML(http.StatusInternalServerError, "error.html", gin.H{
 			"error": "页面渲染失败",

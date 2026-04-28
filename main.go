@@ -5,6 +5,7 @@ import (
 	"ai-later-nav/internal/database"
 	"ai-later-nav/internal/handlers"
 	"ai-later-nav/internal/middleware"
+	"ai-later-nav/internal/services"
 	"ai-later-nav/internal/web"
 	"embed"
 	"html/template"
@@ -41,6 +42,11 @@ func main() {
 		log.Fatalf("Failed to run migrations: %v", err)
 	}
 
+	settingService := services.GetSettingService()
+	if err := settingService.LoadCache(); err != nil {
+		log.Printf("Warning: could not load settings: %v", err)
+	}
+
 	r := gin.Default()
 
 	tmplSub, _ := fs.Sub(templateFS, "templates")
@@ -53,10 +59,14 @@ func main() {
 
 	r.Use(middleware.OptionalAuth())
 	r.Use(middleware.AddGlobalContext())
+	r.Use(middleware.SetupRequired())
 
 	pageHandler := handlers.NewPageHandler(pageTemplates)
 	apiHandler := handlers.NewAPIHandler()
 	adminHandler := handlers.NewAdminHandler()
+
+	r.GET("/setup", pageHandler.SetupPage)
+	r.POST("/api/setup", apiHandler.Setup)
 
 	r.GET("/", pageHandler.HomePage)
 	r.GET("/search", pageHandler.SearchPage)
@@ -69,12 +79,15 @@ func main() {
 	r.POST("/api/auth/logout", apiHandler.Logout)
 
 	r.GET("/api/search", apiHandler.SearchSites)
+	r.GET("/api/search/suggest", apiHandler.SearchSuggestions)
 	r.GET("/api/sites/:id", apiHandler.SiteDetail)
+	r.GET("/api/sites/:id/stats", apiHandler.SiteStats)
 
 	auth := r.Group("/")
 	auth.Use(middleware.AuthMiddleware())
 	{
 		auth.GET("/dashboard", pageHandler.UserDashboard)
+		auth.POST("/api/auth/change-password", apiHandler.ChangePassword)
 		auth.POST("/api/favorites/:id", apiHandler.ToggleFavorite)
 	}
 
@@ -89,6 +102,10 @@ func main() {
 		admin.GET("/sites/edit/:id", adminHandler.AdminEditSiteForm)
 		admin.POST("/sites/edit/:id", adminHandler.AdminEditSite)
 		admin.GET("/sites/delete/:id", adminHandler.AdminDeleteSite)
+		admin.GET("/users", adminHandler.AdminUsers)
+		admin.GET("/stats", adminHandler.AdminStats)
+		admin.GET("/settings", adminHandler.AdminSettingsForm)
+		admin.POST("/settings", adminHandler.AdminSettingsSave)
 	}
 
 	port := config.AppConfig.Port

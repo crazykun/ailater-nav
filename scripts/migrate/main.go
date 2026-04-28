@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	if err := config.LoadConfig(); err != nil {
+	if err := config.LoadRequiredConfig("config.yaml"); err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
@@ -62,9 +62,14 @@ func migrateSites() error {
 
 	siteRepo := repository.NewSiteRepository()
 
-	var created, skipped int
+	var created, skipped, failed int
 	for _, old := range oldSites {
-		existing, _ := siteRepo.GetByName(old.Name)
+		existing, err := siteRepo.GetByName(old.Name)
+		if err != nil {
+			log.Printf("Failed to check existing site %s: %v", old.Name, err)
+			failed++
+			continue
+		}
 		if existing != nil {
 			log.Printf("Skipping existing site: %s", old.Name)
 			skipped++
@@ -84,12 +89,15 @@ func migrateSites() error {
 		id, err := siteRepo.Create(site)
 		if err != nil {
 			log.Printf("Failed to create site %s: %v", old.Name, err)
+			failed++
 			continue
 		}
 
 		if len(old.Tags) > 0 {
 			if err := siteRepo.SetTags(id, old.Tags); err != nil {
 				log.Printf("Failed to set tags for %s: %v", old.Name, err)
+				failed++
+				continue
 			}
 		}
 
@@ -97,6 +105,9 @@ func migrateSites() error {
 		created++
 	}
 
-	log.Printf("Migration summary: %d created, %d skipped", created, skipped)
+	log.Printf("Migration summary: %d created, %d skipped, %d failed", created, skipped, failed)
+	if failed > 0 {
+		return fmt.Errorf("migration completed with %d failed records", failed)
+	}
 	return nil
 }

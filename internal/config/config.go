@@ -1,27 +1,17 @@
 package config
 
 import (
+	"fmt"
 	"os"
+	"strconv"
 
 	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
-	Port      string        `yaml:"port"`
-	Copyright string        `yaml:"copyright"`
-	Admin     AdminConfig   `yaml:"admin"`
-	Session   SessionConfig `yaml:"session"`
-	MySQL     MySQLConfig   `yaml:"mysql"`
-	JWT       JWTConfig     `yaml:"jwt"`
-}
-
-type AdminConfig struct {
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
-}
-
-type SessionConfig struct {
-	Secret string `yaml:"secret"`
+	Port  string      `yaml:"port"`
+	MySQL MySQLConfig `yaml:"mysql"`
+	JWT   JWTConfig   `yaml:"jwt"`
 }
 
 type MySQLConfig struct {
@@ -41,25 +31,15 @@ var AppConfig Config
 
 func LoadConfig() error {
 	if err := loadConfigFile("config.yaml"); err == nil {
-		overrideFromEnv()
-		return nil
+		return overrideFromEnv()
 	}
 
 	if err := loadConfigFile("config.demo.yaml"); err == nil {
-		overrideFromEnv()
-		return nil
+		return overrideFromEnv()
 	}
 
 	AppConfig = Config{
-		Port:      "8080",
-		Copyright: "AI导航 © 2024",
-		Admin: AdminConfig{
-			Username: "admin",
-			Password: "admin123",
-		},
-		Session: SessionConfig{
-			Secret: "your-secret-key-here",
-		},
+		Port: "8080",
 		MySQL: MySQLConfig{
 			Host:     "localhost",
 			Port:     3306,
@@ -72,8 +52,14 @@ func LoadConfig() error {
 			ExpireDays: 7,
 		},
 	}
-	overrideFromEnv()
-	return nil
+	return overrideFromEnv()
+}
+
+func LoadRequiredConfig(filePath string) error {
+	if err := loadConfigFile(filePath); err != nil {
+		return err
+	}
+	return overrideFromEnv()
 }
 
 func loadConfigFile(filePath string) error {
@@ -87,25 +73,9 @@ func loadConfigFile(filePath string) error {
 	return decoder.Decode(&AppConfig)
 }
 
-func overrideFromEnv() {
+func overrideFromEnv() error {
 	if port := os.Getenv("PORT"); port != "" {
 		AppConfig.Port = port
-	}
-
-	if copyright := os.Getenv("COPYRIGHT"); copyright != "" {
-		AppConfig.Copyright = copyright
-	}
-
-	if username := os.Getenv("ADMIN_USERNAME"); username != "" {
-		AppConfig.Admin.Username = username
-	}
-
-	if password := os.Getenv("ADMIN_PASSWORD"); password != "" {
-		AppConfig.Admin.Password = password
-	}
-
-	if secret := os.Getenv("SESSION_SECRET"); secret != "" {
-		AppConfig.Session.Secret = secret
 	}
 
 	if host := os.Getenv("MYSQL_HOST"); host != "" {
@@ -113,8 +83,11 @@ func overrideFromEnv() {
 	}
 
 	if port := os.Getenv("MYSQL_PORT"); port != "" {
-		// parse port
-		AppConfig.MySQL.Port = 3306
+		parsed, err := strconv.Atoi(port)
+		if err != nil {
+			return fmt.Errorf("invalid MYSQL_PORT %q: %w", port, err)
+		}
+		AppConfig.MySQL.Port = parsed
 	}
 
 	if user := os.Getenv("MYSQL_USER"); user != "" {
@@ -132,4 +105,6 @@ func overrideFromEnv() {
 	if secret := os.Getenv("JWT_SECRET"); secret != "" {
 		AppConfig.JWT.Secret = secret
 	}
+
+	return nil
 }

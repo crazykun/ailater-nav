@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>添加站点 - AI导航</title>
+    <title>系统设置 - AI导航</title>
     <script src="/static/css/tailwind-3.4.17.css"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -18,7 +18,7 @@
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
                     仪表盘
                 </a>
-                <a href="/admin/sites" class="flex items-center px-4 py-3 bg-gray-700 text-white">
+                <a href="/admin/sites" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                     站点管理
                 </a>
@@ -30,7 +30,7 @@
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                     用户管理
                 </a>
-                <a href="/admin/settings" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white">
+                <a href="/admin/settings" class="flex items-center px-4 py-3 bg-gray-700 text-white">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     系统设置
                 </a>
@@ -42,67 +42,39 @@
                 </div>
             </nav>
         </div>
-        
+
         <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Header -->
             <header class="bg-white shadow-sm z-10">
                 <div class="flex items-center justify-between px-6 py-4">
-                    <h2 class="text-lg font-medium text-gray-800">添加站点</h2>
-                    <a href="/admin/sites" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors">
-                        返回列表
-                    </a>
+                    <h2 class="text-lg font-medium text-gray-800">系统设置</h2>
                 </div>
             </header>
-            
-            <!-- Content -->
+
             <main class="flex-1 overflow-y-auto p-6 bg-gray-100">
                 <div class="bg-white rounded-lg shadow p-6 max-w-2xl mx-auto">
                     {{ if .error }}
-                    <div class="bg-red-100 text-red-700 p-3 rounded mb-4">
-                        {{ .error }}
-                    </div>
+                    <div class="bg-red-100 text-red-700 p-3 rounded mb-4">{{ .error }}</div>
                     {{ end }}
-                    <form action="/admin/sites/add" method="POST" class="space-y-6">
+                    {{ if .success }}
+                    <div class="bg-green-100 text-green-700 p-3 rounded mb-4">{{ .success }}</div>
+                    {{ end }}
+
+                    <form action="/admin/settings" method="POST" class="space-y-6">
                         <div>
-                            <label for="name" class="block text-sm font-medium text-gray-700 mb-1">站点名称</label>
-                            <input type="text" id="name" name="Name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <label for="site_name" class="block text-sm font-medium text-gray-700 mb-1">站点名称</label>
+                            <input type="text" id="site_name" name="site_name" value="{{ index .settings "site_name" }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
-                            <label for="url" class="block text-sm font-medium text-gray-700 mb-1">站点URL</label>
-                            <input type="url" id="url" name="URL" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <label for="copyright" class="block text-sm font-medium text-gray-700 mb-1">版权信息</label>
+                            <input type="text" id="copyright" name="copyright" value="{{ index .settings "copyright" }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <p class="text-xs text-gray-500 mt-1">显示在页面底部</p>
                         </div>
-                        <div>
-                            <label for="description" class="block text-sm font-medium text-gray-700 mb-1">站点描述</label>
-                            <textarea id="description" name="Description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
-                        </div>
-                        <div>
-                            <label for="logo" class="block text-sm font-medium text-gray-700 mb-1">Logo路径</label>
-                            <input type="text" id="logo" name="Logo" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="/static/img/...">
-                        </div>
-                        <div>
-                            <label for="category" class="block text-sm font-medium text-gray-700 mb-1">主分类</label>
-                            <input type="text" id="category" name="Category" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="如：AI对话">
-                        </div>
-                        <div>
-                            <label for="tags" class="block text-sm font-medium text-gray-700 mb-1">标签（用逗号分隔）</label>
-                            <input type="text" id="tags" name="Tags" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="AI对话, 语言模型, 智能助手">
-                        </div>
-                        <div>
-                            <label for="rating" class="block text-sm font-medium text-gray-700 mb-1">评分（1-5）</label>
-                            <input type="number" id="rating" name="Rating" min="0" max="5" step="0.1" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.0">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">推荐</label>
-                            <input type="checkbox" id="featured" name="Featured" class="mt-1">
-                            <label for="featured" class="ml-2 text-sm text-gray-600">设为推荐站点</label>
-                        </div>
-                        <div class="flex justify-end space-x-3">
-                            <a href="/admin/sites" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                                取消
-                            </a>
-                            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
-                                保存
+                        <div class="flex justify-end">
+                            <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600">
+                                保存设置
                             </button>
                         </div>
                     </form>

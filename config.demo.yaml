@@ -1,12 +1,4 @@
 port: 8080
-copyright: "京ICP备8888888号"
-
-admin:
-  username: admin
-  password: admin123
-
-session:
-  secret: your-secret-key-here
 
 mysql:
   host: localhost

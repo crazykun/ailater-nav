@@ -31,6 +31,27 @@
         <span>评分: {{ .site.Rating }}/5</span>
         <span>访问: {{ .site.Visits }} 次</span>
     </div>
+
+    {{ if .stats }}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 text-center">
+            <div class="text-2xl font-bold text-blue-600">{{ .stats.PV }}</div>
+            <div class="text-xs text-gray-500 mt-1">总 PV</div>
+        </div>
+        <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 text-center">
+            <div class="text-2xl font-bold text-purple-600">{{ .stats.UV }}</div>
+            <div class="text-xs text-gray-500 mt-1">总 UV</div>
+        </div>
+        <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 text-center">
+            <div class="text-2xl font-bold text-green-600">{{ .stats.TodayPV }}</div>
+            <div class="text-xs text-gray-500 mt-1">今日 PV</div>
+        </div>
+        <div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-4 text-center">
+            <div class="text-2xl font-bold text-orange-600">{{ .stats.TodayUV }}</div>
+            <div class="text-xs text-gray-500 mt-1">今日 UV</div>
+        </div>
+    </div>
+    {{ end }}
     
     <a href="{{ .site.URL }}" target="_blank" rel="noopener noreferrer"
        class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-all">

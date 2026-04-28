@@ -32,3 +32,13 @@ type SiteDisplay struct {
 	Initials string   `json:"initials"`
 	IsFav    bool     `json:"is_fav"`
 }
+
+type SiteStats struct {
+	SiteID    int64 `json:"site_id" db:"site_id"`
+	PV        int64 `json:"pv" db:"pv"`
+	UV        int64 `json:"uv" db:"uv"`
+	TodayPV   int64 `json:"today_pv" db:"today_pv"`
+	TodayUV   int64 `json:"today_uv" db:"today_uv"`
+	WeekPV    int64 `json:"week_pv" db:"week_pv"`
+	WeekUV    int64 `json:"week_uv" db:"week_uv"`
+}

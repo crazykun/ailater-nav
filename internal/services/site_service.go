@@ -16,6 +16,10 @@ func NewSiteService() *SiteService {
 	}
 }
 
+func (s *SiteService) Count() (int64, error) {
+	return s.siteRepo.CountSites()
+}
+
 func (s *SiteService) GetAll() ([]models.SiteDisplay, error) {
 	sites, err := s.siteRepo.GetAllWithTags()
 	if err != nil {
@@ -56,6 +60,26 @@ func (s *SiteService) GetByID(id int64) (*models.SiteWithTags, error) {
 	}, nil
 }
 
+func (s *SiteService) GetByIDs(ids []int64) ([]models.SiteDisplay, error) {
+	var result []models.SiteDisplay
+	for _, id := range ids {
+		site, err := s.GetByID(id)
+		if err != nil {
+			continue
+		}
+		if site == nil {
+			continue
+		}
+		result = append(result, models.SiteDisplay{
+			Site:     site.Site,
+			Tags:     site.Tags,
+			Color:    site.Color,
+			Initials: site.Initials,
+		})
+	}
+	return result, nil
+}
+
 func (s *SiteService) Create(site *models.Site, tags []string) (int64, error) {
 	id, err := s.siteRepo.Create(site)
 	if err != nil {
@@ -94,6 +118,14 @@ func (s *SiteService) IncrementVisits(siteID int64, ip string) error {
 	return s.siteRepo.IncrementVisits(siteID, ip)
 }
 
+func (s *SiteService) GetSiteStats(siteID int64) (*models.SiteStats, error) {
+	return s.siteRepo.GetSiteStats(siteID)
+}
+
+func (s *SiteService) GetAllSitesStats() ([]models.SiteStats, error) {
+	return s.siteRepo.GetAllSitesStats()
+}
+
 func (s *SiteService) Search(query, category, sortBy string, page, pageSize int) ([]models.SiteDisplay, int, error) {
 	if page < 1 {
 		page = 1
@@ -118,4 +150,11 @@ func (s *SiteService) Search(query, category, sortBy string, page, pageSize int)
 		})
 	}
 	return result, total, nil
+}
+
+func (s *SiteService) GetSearchSuggestions(query string, limit int) ([]string, error) {
+	if limit <= 0 {
+		limit = 5
+	}
+	return s.siteRepo.GetSearchSuggestions(query, limit)
 }

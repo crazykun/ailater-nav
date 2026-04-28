@@ -36,14 +36,27 @@
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('animate-fade-in');
+                // 添加 transition-enabled 类以启用悬停动画
+                setTimeout(() => {
+                    entry.target.classList.add('transition-enabled');
+                }, 500);
                 observer.unobserve(entry.target);
             }
         });
     }, observerOptions);
 
     // 观察所有卡片
-    document.querySelectorAll('.site-card').forEach(card => {
+    document.querySelectorAll('.card-hover, .site-card').forEach(card => {
         observer.observe(card);
+    });
+
+    // HTMX 请求完成后重新观察新卡片
+    document.addEventListener('htmx:afterSwap', function(evt) {
+        evt.detail.target.querySelectorAll('.card-hover, .site-card').forEach(card => {
+            if (!card.classList.contains('animate-fade-in')) {
+                observer.observe(card);
+            }
+        });
     });
 
     // HTMX 事件处理

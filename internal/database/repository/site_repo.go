@@ -16,6 +16,12 @@ func NewSiteRepository() *SiteRepository {
 	return &SiteRepository{db: database.DB}
 }
 
+func (r *SiteRepository) CountSites() (int64, error) {
+	var count int64
+	err := r.db.QueryRow("SELECT COUNT(*) FROM sites WHERE deleted = 0").Scan(&count)
+	return count, err
+}
+
 func (r *SiteRepository) GetAll() ([]models.Site, error) {
 	rows, err := r.db.Query(`
 		SELECT id, name, url, description, logo, category, rating, visits, featured, deleted, created_at, updated_at
@@ -125,9 +131,8 @@ func (r *SiteRepository) Search(query, category, sortBy string, limit, offset in
 	}
 
 	if query != "" {
-		where = append(where, "(s.name LIKE ? OR s.description LIKE ? OR EXISTS (SELECT 1 FROM site_tags st JOIN tags t ON st.tag_id = t.id WHERE st.site_id = s.id AND t.name LIKE ?))")
-		q := "%" + query + "%"
-		args = append(args, q, q, q)
+		where = append(where, `(s.name LIKE ? OR s.description LIKE ? OR EXISTS (SELECT 1 FROM site_tags st JOIN tags t ON st.tag_id = t.id WHERE st.site_id = s.id AND t.name LIKE ?))`)
+		args = append(args, "%"+query+"%", "%"+query+"%", "%"+query+"%")
 	}
 
 	whereClause := strings.Join(where, " AND ")
@@ -171,6 +176,36 @@ func (r *SiteRepository) Search(query, category, sortBy string, limit, offset in
 		sites = append(sites, s)
 	}
 	return sites, total, rows.Err()
+}
+
+func (r *SiteRepository) GetSearchSuggestions(query string, limit int) ([]string, error) {
+	if query == "" {
+		return nil, nil
+	}
+
+	rows, err := r.db.Query(`
+		SELECT DISTINCT name FROM sites 
+		WHERE deleted = 0 AND (name LIKE ? OR description LIKE ? OR id IN (
+			SELECT st.site_id FROM site_tags st JOIN tags t ON st.tag_id = t.id 
+			WHERE t.name LIKE ?
+		))
+		ORDER BY rating DESC, visits DESC 
+		LIMIT ?
+	`, "%"+query+"%", "%"+query+"%", "%"+query+"%", limit)
+	if err != nil {
+		return nil, fmt.Errorf("query suggestions: %w", err)
+	}
+	defer rows.Close()
+
+	var suggestions []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, fmt.Errorf("scan suggestion: %w", err)
+		}
+		suggestions = append(suggestions, name)
+	}
+	return suggestions, rows.Err()
 }
 
 func (r *SiteRepository) GetCategories() ([]string, error) {
@@ -257,6 +292,70 @@ func (r *SiteRepository) IncrementVisits(siteID int64, ip string) error {
 	}
 	_, err = r.db.Exec("INSERT INTO visits (site_id, ip) VALUES (?, ?)", siteID, ip)
 	return err
+}
+
+func (r *SiteRepository) GetSiteStats(siteID int64) (*models.SiteStats, error) {
+	stats := &models.SiteStats{SiteID: siteID}
+
+	err := r.db.QueryRow(`
+		SELECT 
+			COUNT(*) as pv,
+			COUNT(DISTINCT ip) as uv
+		FROM visits 
+		WHERE site_id = ?
+	`, siteID).Scan(&stats.PV, &stats.UV)
+	if err != nil {
+		return nil, fmt.Errorf("query total stats: %w", err)
+	}
+
+	err = r.db.QueryRow(`
+		SELECT 
+			COUNT(*) as today_pv,
+			COUNT(DISTINCT ip) as today_uv
+		FROM visits 
+		WHERE site_id = ? AND DATE(visited_at) = CURDATE()
+	`, siteID).Scan(&stats.TodayPV, &stats.TodayUV)
+	if err != nil {
+		return nil, fmt.Errorf("query today stats: %w", err)
+	}
+
+	err = r.db.QueryRow(`
+		SELECT 
+			COUNT(*) as week_pv,
+			COUNT(DISTINCT ip) as week_uv
+		FROM visits 
+		WHERE site_id = ? AND visited_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+	`, siteID).Scan(&stats.WeekPV, &stats.WeekUV)
+	if err != nil {
+		return nil, fmt.Errorf("query week stats: %w", err)
+	}
+
+	return stats, nil
+}
+
+func (r *SiteRepository) GetAllSitesStats() ([]models.SiteStats, error) {
+	rows, err := r.db.Query(`
+		SELECT 
+			site_id,
+			COUNT(*) as pv,
+			COUNT(DISTINCT ip) as uv
+		FROM visits 
+		GROUP BY site_id
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("query all stats: %w", err)
+	}
+	defer rows.Close()
+
+	var stats []models.SiteStats
+	for rows.Next() {
+		var s models.SiteStats
+		if err := rows.Scan(&s.SiteID, &s.PV, &s.UV); err != nil {
+			return nil, fmt.Errorf("scan stats: %w", err)
+		}
+		stats = append(stats, s)
+	}
+	return stats, nil
 }
 
 func (r *SiteRepository) GetAllWithTags() ([]models.SiteWithTags, error) {

@@ -1,4 +1,4 @@
-# AI Tools Navigator
+# AI Later
 
 <div align="center">
 
@@ -6,171 +6,256 @@
 
 # AI Later 创造美好生活
 
-一个现代化的 AI 工具导航网站，帮助你快速发现和使用最优质的人工智能工具。
+一个基于 **Go + Gin + MySQL** 的 AI 工具导航站，支持 **用户登录、收藏、后台管理**，并提供从历史 `data/ai.json` 到 MySQL 的一次性迁移能力。
 
 [![Go Version](https://img.shields.io/badge/Go-1.24+-00ADD8?style=flat&logo=go)](https://golang.org/)
 [![Gin Framework](https://img.shields.io/badge/Gin-Web-Framework-00ADD8?style=flat)](https://gin-gonic.com/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?style=flat&logo=mysql&logoColor=white)](https://www.mysql.com/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 </div>
 
-## ✨ 功能特点
+---
 
-- 🎨 **精美 UI 设计** - 现代化的界面设计，提供愉悦的浏览体验
-- 📱 **响应式布局** - 完美支持桌面端、平板和移动设备
-- 🔍 **智能搜索** - 支持按名称和描述快速搜索 AI 工具
-- 🏷️ **分类筛选** - 按对话、创作、编程、工具等分类浏览
-- ⚡ **数据热重载** - 修改数据文件后自动重新加载，无需重启服务
-- 🖼️ **图片容错** - Logo 加载失败时自动生成彩色首字母占位图
-- 🚀 **高性能** - 使用 Go + Gin 构建，响应快速
+## ✨ 功能概览
 
-## 🎯 界面预览
+- 🔍 **AI 工具搜索与分类筛选**
+- 👤 **用户注册 / 登录 / 退出**
+- ⭐ **收藏功能与个人中心**
+- 🛠️ **后台站点管理**
+- 🗄️ **MySQL 持久化存储**
+- 🚚 **旧版 `data/ai.json` 一次性迁移到 MySQL**
+- 🎨 **Go Template + HTMX + Alpine.js 驱动的轻量交互界面**
 
-![首页截图](screenshots/home.png)
+## 🧰 技术栈
 
-## 🛠️ 技术栈
+| 类别 | 方案 |
+|---|---|
+| 后端 | Go 1.24 + Gin |
+| 模板 | Go HTML Templates |
+| 前端 | Tailwind CSS + HTMX + Alpine.js |
+| 数据库 | MySQL 8+ |
+| 数据迁移 | Bash + Go 脚本 |
+| 鉴权 | JWT |
 
-- **后端**: Golang + Gin Framework
-- **前端**: HTML5 + Tailwind CSS
-- **模板引擎**: Go HTML Templates
-- **数据存储**: JSON 文件（支持热重载）
-
-## 📦 本地运行
-
-### 环境要求
+## 📦 环境要求
 
 - Go 1.24 或更高版本
+- MySQL 8.0 或兼容版本
 
-### 快速开始
+## 🚀 快速开始
+
+### 1) 克隆项目
 
 ```bash
-# 1. 克隆项目
 git clone https://github.com/crazykun/ai-later.git
 cd ai-later
-
-# 2. 复制配置文件
-cp config.demo.yaml config.yaml
-
-# 3. 运行项目
-go run main.go
 ```
 
-服务将在 `http://localhost:8080` 启动。
-
-### 构建可执行文件
+### 2) 准备配置文件
 
 ```bash
-go build -o ai-navigator
-./ai-navigator
+cp config.demo.yaml config.yaml
 ```
 
-## 📁 项目结构
-
-```
-.
-├── config.demo.yaml    # 配置文件示例
-├── config/             # 配置模块
-│   └── config.go
-├── data/               # 数据文件
-│   └── ai.json        # AI 工具数据（支持热重载）
-├── global/             # 全局变量
-│   └── global.go
-├── handlers/           # 处理器
-│   └── handlers.go
-├── middleware/         # 中间件
-│   └── globalmiddleware.go
-├── models/             # 数据模型
-│   └── site.go
-├── static/             # 静态资源
-│   ├── css/
-│   │   └── style.css
-│   ├── img/
-│   │   └── logo.png
-│   └── js/
-│       └── main.js
-├── templates/          # HTML 模板
-│   ├── layout.html
-│   └── index.html
-├── utils/              # 工具函数
-│   └── color_helper.go
-├── main.go             # 程序入口
-└── README.md
-```
-
-## ⚙️ 配置说明
-
-`config.yaml` 配置文件示例：
+编辑 `config.yaml`，至少确认以下配置正确：
 
 ```yaml
 port: 8080
-copyright: "备案信息"
+
+mysql:
+  host: localhost
+  port: 3306
+  username: root
+  password: "your-password"
+  database: ai_later
+
+jwt:
+  secret: your-jwt-secret-change-me
+  expire_days: 7
 ```
 
-## 📊 数据格式
+### 3) 初始化 MySQL 并导入历史 JSON 数据
 
-`data/ai.json` 中的站点对象结构：
+如果你是从旧版 JSON 数据迁移，直接运行：
+
+```bash
+bash scripts/init_mysql_from_json.sh
+```
+
+这个脚本会按顺序执行：
+
+1. 检查 `go`、`config.yaml`、`data/ai.json`
+2. 根据 `config.yaml` 创建数据库
+3. 执行 `internal/database/migrations/` 目录下全部 SQL migration 文件
+4. 读取 `data/ai.json` 并导入 MySQL
+
+> 💡 迁移脚本具备幂等性：已存在的站点会按名称跳过，重复执行不会重复插入同名站点。
+
+### 4) 启动服务
+
+```bash
+go run ./main.go
+```
+
+默认访问地址：
+
+```text
+http://localhost:8080
+```
+
+---
+
+## 🧭 线上迁移流程
+
+推荐线上初始化步骤：
+
+```bash
+cp config.demo.yaml config.yaml
+# 修改 mysql / jwt / admin 配置
+bash scripts/init_mysql_from_json.sh
+go run ./main.go
+```
+
+### 迁移建议
+
+- ✅ 首次迁移前先备份 `data/ai.json`
+- ✅ 使用独立 MySQL 账号，不要在线上继续使用 root
+- ✅ 将 `JWT_SECRET`、数据库密码改成强随机值
+- ✅ 迁移完成后以 **MySQL 为准**，不要再把 JSON 作为主数据源
+
+如果线上已经完成过迁移，之后只需要正常启动应用，不必重复执行 JSON 导入。
+
+---
+
+## 🗄️ 数据库初始化与迁移说明
+
+### `scripts/init_mysql_from_json.sh`
+
+一键初始化脚本，适用于首次从 JSON 版本切到 MySQL 版本。
+
+执行内容：
+
+```bash
+go run ./scripts/create_db/main.go
+go run ./scripts/migrate/main.go
+```
+
+### `scripts/create_db/main.go`
+
+根据 `config.yaml` 中的 MySQL 配置创建数据库。
+
+### `scripts/migrate/main.go`
+
+负责两件事：
+
+1. 执行 SQL migration
+2. 将 `data/ai.json` 中的站点导入到 MySQL
+
+当导入过程中存在失败记录时，脚本会返回非零退出状态，避免“部分成功但整体显示成功”的情况。
+
+### 旧版 JSON 数据结构
 
 ```json
 {
-    "name": "站点名称",
-    "url": "https://example.com",
-    "description": "描述",
-    "logo": "/static/img/logo.png",
-    "tags": ["标签1", "标签2"],
-    "category": "分类",
-    "rating": 4.5,
-    "featured": true
+  "name": "站点名称",
+  "url": "https://example.com",
+  "description": "描述",
+  "logo": "/static/img/logo.png",
+  "tags": ["标签1", "标签2"],
+  "category": "分类",
+  "rating": 4.5,
+  "featured": true
 }
 ```
 
-修改 `ai.json` 后服务会自动重新加载数据，无需重启。
+---
 
-## 🎨 核心特性说明
+## 🧱 数据库结构
 
-### 数据热重载
+当前 migration SQL 位于：
 
-使用 `fsnotify` 监控 `data/ai.json` 文件变更，文件修改时自动重新加载数据，使用 `sync.RWMutex` 保证并发安全。
+- `internal/database/migrations/`
 
-### 图片容错处理
+应用会按文件名排序执行该目录下所有 `*.sql` 文件。
 
-当站点 Logo 加载失败时，前端会自动生成彩色首字母占位图，颜色根据站点名称通过哈希算法生成，保持一致性。
+核心表包括：
 
-### 响应式设计
+- `sites`
+- `tags`
+- `site_tags`
+- `users`
+- `favorites`
+- `visits`
 
-- 使用 Tailwind CSS 构建响应式布局
-- 支持 PC、平板、手机等多种设备
-- 移动端优化的导航菜单和搜索体验
+---
 
-## 🚀 部署
+## 🧪 测试
 
-### 使用 Docker
-
-```bash
-docker build -t ai-navigator .
-docker run -p 8080:8080 ai-navigator
-```
-
-### 直接部署
+运行全部测试：
 
 ```bash
-# 构建
-go build -o ai-navigator
-
-# 运行
-./ai-navigator
+go test ./...
 ```
 
-## 📝 License
+模板相关回归测试位于：
+
+- `test/templ_test.go`
+
+---
+
+## 📁 项目结构
+
+```text
+.
+├── config.demo.yaml
+├── config.yaml
+├── data/
+│   └── ai.json
+├── internal/
+│   ├── config/
+│   ├── database/
+│   │   ├── migrations/
+│   │   └── repository/
+│   ├── handlers/
+│   ├── middleware/
+│   ├── models/
+│   ├── services/
+│   ├── utils/
+│   └── web/
+├── scripts/
+│   ├── create_db/
+│   │   └── main.go
+│   ├── migrate/
+│   │   └── main.go
+│   └── init_mysql_from_json.sh
+├── static/
+├── templates/
+├── test/
+│   └── templ_test.go
+├── main.go
+└── README.md
+```
+
+---
+
+## 🔧 仅初始化数据库结构
+
+如果你只想建库，不导入 JSON 数据：
+
+```bash
+go run ./scripts/create_db/main.go
+go run ./main.go
+```
+
+`main.go` 启动时会自动执行数据库 migration。
+
+---
+
+## 📜 License
 
 MIT License
 
-## 🤝 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
-## 📧 联系方式
-
-如有问题或建议，请提交 Issue。
 
 ---
 

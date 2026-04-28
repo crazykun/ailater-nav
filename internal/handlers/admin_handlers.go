@@ -12,20 +12,26 @@ import (
 
 type AdminHandler struct {
 	siteService *services.SiteService
+	userService *services.UserService
 }
 
 func NewAdminHandler() *AdminHandler {
 	return &AdminHandler{
 		siteService: services.NewSiteService(),
+		userService: services.NewUserService(),
 	}
 }
 
 func (h *AdminHandler) AdminIndex(c *gin.Context) {
+	siteCount, _ := h.siteService.Count()
+	userCount, _ := h.userService.CountUsers()
 	copyright, _ := c.Get("Copyright")
 	c.HTML(http.StatusOK, "admin-index.html", gin.H{
 		"Copyright": copyright,
 		"isAdmin":   true,
 		"username":  c.GetString("username"),
+		"siteCount": siteCount,
+		"userCount": userCount,
 	})
 }
 
@@ -185,4 +191,101 @@ func (h *AdminHandler) AdminDeleteSite(c *gin.Context) {
 	}
 
 	c.Redirect(http.StatusFound, "/admin/sites")
+}
+
+func (h *AdminHandler) AdminUsers(c *gin.Context) {
+	users, err := h.userService.GetAllUsers()
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{
+			"error": "加载用户失败",
+		})
+		return
+	}
+
+	c.HTML(http.StatusOK, "admin-users.html", gin.H{
+		"users":    users,
+		"isAdmin":  true,
+		"username": c.GetString("username"),
+	})
+}
+
+func (h *AdminHandler) AdminSettingsForm(c *gin.Context) {
+	ss := services.GetSettingService()
+	settings := ss.GetAllSettings()
+
+	c.HTML(http.StatusOK, "admin-settings.html", gin.H{
+		"settings": settings,
+		"isAdmin":  true,
+		"username": c.GetString("username"),
+	})
+}
+
+func (h *AdminHandler) AdminSettingsSave(c *gin.Context) {
+	ss := services.GetSettingService()
+	updates := map[string]string{
+		"site_name": strings.TrimSpace(c.PostForm("site_name")),
+		"copyright": strings.TrimSpace(c.PostForm("copyright")),
+	}
+
+	if err := ss.UpdateMultiple(updates); err != nil {
+		settings := ss.GetAllSettings()
+		c.HTML(http.StatusOK, "admin-settings.html", gin.H{
+			"settings": settings,
+			"error":    "保存失败: " + err.Error(),
+			"isAdmin":  true,
+			"username": c.GetString("username"),
+		})
+		return
+	}
+
+	settings := ss.GetAllSettings()
+	c.HTML(http.StatusOK, "admin-settings.html", gin.H{
+		"settings": settings,
+		"success":  "设置已保存",
+		"isAdmin":  true,
+		"username": c.GetString("username"),
+	})
+}
+
+func (h *AdminHandler) AdminStats(c *gin.Context) {
+	sites, err := h.siteService.GetAll()
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{
+			"error": "加载站点失败",
+		})
+		return
+	}
+
+	allStats, err := h.siteService.GetAllSitesStats()
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{
+			"error": "加载统计失败",
+		})
+		return
+	}
+
+	statsMap := make(map[int64]models.SiteStats)
+	for _, s := range allStats {
+		statsMap[s.SiteID] = s
+	}
+
+	type SiteWithStats struct {
+		models.SiteDisplay
+		Stats *models.SiteStats
+	}
+
+	var sitesWithStats []SiteWithStats
+	for _, site := range sites {
+		sws := SiteWithStats{SiteDisplay: site}
+		if stats, ok := statsMap[site.ID]; ok {
+			sws.Stats = &stats
+		}
+		sitesWithStats = append(sitesWithStats, sws)
+	}
+
+	c.HTML(http.StatusOK, "admin-stats.html", gin.H{
+		"sites":    sitesWithStats,
+		"isAdmin":  true,
+		"username": c.GetString("username"),
+	})
 }

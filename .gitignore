@@ -27,3 +27,4 @@ data/custom.json
 # Legacy
 CLAUDE.md
 ai-later-nav
+docs/*

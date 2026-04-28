@@ -1,23 +1,41 @@
 package main
 
 import (
+	"ai-later-nav/internal/config"
 	"database/sql"
 	"fmt"
 	"log"
 
-	_ "github.com/go-sql-driver/mysql"
+	mysql "github.com/go-sql-driver/mysql"
 )
 
 func main() {
-	db, err := sql.Open("mysql", "root:123456@tcp(localhost:3306)/")
+	if err := config.LoadRequiredConfig("config.yaml"); err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+
+	cfg := mysql.NewConfig()
+	cfg.User = config.AppConfig.MySQL.Username
+	cfg.Passwd = config.AppConfig.MySQL.Password
+	cfg.Net = "tcp"
+	cfg.Addr = fmt.Sprintf("%s:%d", config.AppConfig.MySQL.Host, config.AppConfig.MySQL.Port)
+	cfg.Params = map[string]string{
+		"charset": "utf8mb4",
+	}
+
+	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		log.Fatal("Error connecting:", err)
 	}
 	defer db.Close()
 
-	_, err = db.Exec("CREATE DATABASE IF NOT EXISTS ai_later CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
-	if err != nil {
+	query := fmt.Sprintf(
+		"CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci",
+		config.AppConfig.MySQL.Database,
+	)
+	if _, err := db.Exec(query); err != nil {
 		log.Fatal("Error creating database:", err)
 	}
-	fmt.Println("Database 'ai_later' created successfully")
+
+	fmt.Printf("Database '%s' created successfully\n", config.AppConfig.MySQL.Database)
 }

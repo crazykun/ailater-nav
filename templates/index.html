@@ -58,10 +58,13 @@
             <!-- 站点网格 -->
             <div id="search-results" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
                 {{ range .sites }}
-                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-lg hover:shadow-blue-100/50 dark:hover:shadow-blue-900/20 flex flex-col group relative overflow-hidden transition-all duration-300 hover:-translate-y-1 animate-fade-in">
+                <div class="card-hover bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 flex flex-col group relative overflow-hidden animate-fade-in">
+                    
+                    <!-- 卡片装饰元素 -->
+                    <div class="card-decoration"></div>
                     
                     <!-- 卡片内容 -->
-                    <div class="flex-1 flex flex-col">
+                    <div class="flex-1 flex flex-col relative z-10">
                         <div class="flex items-start gap-3 mb-3">
                             <div class="relative shrink-0">
                                 {{ if .Logo }}
@@ -76,17 +79,17 @@
                                 {{ end }}
                             </div>
                             <div class="flex-1 min-w-0">
-                                <h2 class="text-base font-bold text-gray-900 dark:text-white mb-1 group-hover:text-blue-500 transition-colors duration-300 truncate">{{ .Name }}</h2>
+                                <h2 class="card-title text-base font-bold text-gray-900 dark:text-white mb-1 group-hover:text-blue-500 transition-colors duration-300 truncate">{{ .Name }}</h2>
                                 <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed line-clamp-2">{{ .Description }}</p>
                             </div>
                         </div>
                     </div>
                     
                     <!-- 标签和操作 -->
-                    <div class="flex items-center justify-between mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center justify-between mt-auto pt-3 border-t border-gray-100 dark:border-gray-700 relative z-10">
                         <div class="flex flex-wrap gap-1.5 flex-1 mr-2">
                             {{ range .Tags }}
-                            <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800">
+                            <span class="tag-badge px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800">
                                 {{ . }}
                             </span>
                             {{ end }}

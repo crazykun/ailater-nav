@@ -2,8 +2,11 @@ package middleware
 
 import (
 	"ai-later-nav/internal/config"
+	"ai-later-nav/internal/database/repository"
 	"ai-later-nav/internal/models"
+	"ai-later-nav/internal/services"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -92,9 +95,17 @@ func OptionalAuth() gin.HandlerFunc {
 func AdminRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role, exists := c.Get("role")
-		if !exists || role.(string) != "admin" {
+		if !exists {
 			c.HTML(http.StatusForbidden, "error.html", gin.H{
-				"error": "需要管理员权限",
+				"error": "需要登录",
+			})
+			c.Abort()
+			return
+		}
+		roleStr, ok := role.(string)
+		if !ok || roleStr != "admin" {
+			c.HTML(http.StatusForbidden, "error.html", gin.H{
+				"error": "需要管理员权限，当前角色: " + roleStr,
 			})
 			c.Abort()
 			return
@@ -105,11 +116,10 @@ func AdminRequired() gin.HandlerFunc {
 
 func AddGlobalContext() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		copyright := config.AppConfig.Copyright
-		if copyright == "" {
-			copyright = "AI导航 © 2024"
-		}
+		ss := services.GetSettingService()
+		copyright := ss.GetSetting("copyright")
 		c.Set("Copyright", copyright)
+		c.Set("SiteName", ss.GetSetting("site_name"))
 
 		if userID, exists := c.Get("user_id"); exists {
 			c.Set("isLoggedIn", true)
@@ -117,6 +127,31 @@ func AddGlobalContext() gin.HandlerFunc {
 			c.Set("username", c.GetString("username"))
 		} else {
 			c.Set("isLoggedIn", false)
+		}
+
+		c.Next()
+	}
+}
+
+func SetupRequired() gin.HandlerFunc {
+	userRepo := repository.NewUserRepository()
+	return func(c *gin.Context) {
+		path := c.Request.URL.Path
+		if strings.HasPrefix(path, "/static/") || path == "/setup" || path == "/api/setup" {
+			c.Next()
+			return
+		}
+
+		count, err := userRepo.CountUsers()
+		if err != nil {
+			c.Next()
+			return
+		}
+
+		if count == 0 {
+			c.Redirect(http.StatusFound, "/setup")
+			c.Abort()
+			return
 		}
 
 		c.Next()
