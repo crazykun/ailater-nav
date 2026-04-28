@@ -96,7 +96,8 @@
                             <!-- 收藏按钮 -->
                             {{ if $.isLoggedIn }}
                             <button hx-post="/api/favorites/{{ .ID }}" 
-                                    hx-swap="none"
+                                    hx-target="this"
+                                    hx-swap="outerHTML"
                                     class="p-1.5 text-gray-400 hover:text-yellow-500 rounded-lg transition-colors"
                                     title="收藏">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

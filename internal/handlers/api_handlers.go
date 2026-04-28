@@ -159,22 +159,28 @@ func (h *APIHandler) Logout(c *gin.Context) {
 func (h *APIHandler) ToggleFavorite(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "请先登录"})
+		c.Header("HX-Redirect", "/login")
+		c.Status(http.StatusUnauthorized)
 		return
 	}
 
 	siteID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的站点 ID"})
+		c.Status(http.StatusBadRequest)
 		return
 	}
 
 	isFav, _ := h.userService.IsFavorite(userID.(int64), siteID)
 	if isFav {
 		h.userService.RemoveFavorite(userID.(int64), siteID)
-		c.JSON(http.StatusOK, gin.H{"is_fav": false})
 	} else {
 		h.userService.AddFavorite(userID.(int64), siteID)
-		c.JSON(http.StatusOK, gin.H{"is_fav": true})
 	}
+
+	// Return updated button HTML
+	newIsFav := !isFav
+	c.HTML(http.StatusOK, "partials/favorite-btn.html", gin.H{
+		"siteID": siteID,
+		"isFav":  newIsFav,
+	})
 }
