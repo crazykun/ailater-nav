@@ -1,75 +1,96 @@
-// main.go
 package main
 
 import (
-	"ai-navigator/config"
-	"ai-navigator/handlers"
-	"ai-navigator/middleware"
+	"ai-later-nav/internal/config"
+	"ai-later-nav/internal/database"
+	"ai-later-nav/internal/handlers"
+	"ai-later-nav/internal/middleware"
+	"ai-later-nav/internal/web"
+	"embed"
+	"html/template"
+	"io/fs"
 	"log"
+	"net/http"
 
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 )
 
+//go:embed templates/*
+var templateFS embed.FS
+
+//go:embed static
+var staticFS embed.FS
+
 func main() {
-	// Load config
 	if err := config.LoadConfig(); err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Create a new Gin router with default middleware
-	r := gin.Default()
+	if err := database.Init(database.MySQLConfig{
+		Host:     config.AppConfig.MySQL.Host,
+		Port:     config.AppConfig.MySQL.Port,
+		Username: config.AppConfig.MySQL.Username,
+		Password: config.AppConfig.MySQL.Password,
+		Database: config.AppConfig.MySQL.Database,
+	}); err != nil {
+		log.Fatalf("Failed to init database: %v", err)
+	}
+	defer database.Close()
 
-	// Setup session
-	store := cookie.NewStore([]byte(config.AppConfig.Session.Secret))
-	r.Use(sessions.Sessions("admin_session", store))
-
-	// Load HTML templates - explicitly list files to avoid directory issues
-	r.LoadHTMLFiles(
-		"templates/index.html",
-		"templates/error.html",
-		"templates/layout.html",
-		"templates/admin/admin-login.html",
-		"templates/admin/admin-index.html",
-		"templates/admin/admin-sites.html",
-		"templates/admin/admin-add-site.html",
-		"templates/admin/admin-edit-site.html",
-	)
-
-	// Serve static files
-	r.Static("/static", "./static")
-
-	// 在router中使用中间件
-	r.Use(middleware.AddGlobalContext())
-
-	// Frontend routes
-	r.GET("/", handlers.HomeHandler)
-	r.GET("/search", handlers.SearchHandler)
-
-	// Admin routes
-	admin := r.Group("/admin")
-	{
-		admin.GET("/login", handlers.AdminLoginHandler)
-		admin.POST("/login", handlers.AdminLoginPostHandler)
-		admin.GET("/logout", handlers.AdminLogoutHandler)
-		admin.GET("/captcha", handlers.CaptchaHandler)
-
-		// Protected admin routes
-		adminAuth := admin.Group("/")
-		adminAuth.Use(middleware.AdminAuthMiddleware())
-		{
-			adminAuth.GET("/", handlers.AdminIndexHandler)
-			adminAuth.GET("/sites", handlers.AdminSitesHandler)
-			adminAuth.GET("/sites/add", handlers.AdminAddSiteHandler)
-			adminAuth.POST("/sites/add", handlers.AdminAddSitePostHandler)
-			adminAuth.GET("/sites/edit/:id", handlers.AdminEditSiteHandler)
-			adminAuth.POST("/sites/edit/:id", handlers.AdminEditSitePostHandler)
-			adminAuth.GET("/sites/delete/:id", handlers.AdminDeleteSiteHandler)
-		}
+	if err := database.RunMigrations(database.DB, "internal/database/migrations"); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
 	}
 
-	// Start server on configured port
+	r := gin.Default()
+
+	tmplSub, _ := fs.Sub(templateFS, "templates")
+	pageTemplates := web.BuildPageTemplates(tmplSub)
+	sharedTemplates := template.Must(template.ParseFS(tmplSub, "error.html", "admin/*.html", "partials/*.html"))
+	r.SetHTMLTemplate(sharedTemplates)
+
+	staticSub, _ := fs.Sub(staticFS, "static")
+	r.StaticFS("/static", http.FS(staticSub))
+
+	r.Use(middleware.OptionalAuth())
+	r.Use(middleware.AddGlobalContext())
+
+	pageHandler := handlers.NewPageHandler(pageTemplates)
+	apiHandler := handlers.NewAPIHandler()
+	adminHandler := handlers.NewAdminHandler()
+
+	r.GET("/", pageHandler.HomePage)
+	r.GET("/search", pageHandler.SearchPage)
+
+	r.GET("/login", pageHandler.LoginPage)
+	r.GET("/register", pageHandler.RegisterPage)
+
+	r.POST("/api/auth/login", apiHandler.Login)
+	r.POST("/api/auth/register", apiHandler.Register)
+	r.POST("/api/auth/logout", apiHandler.Logout)
+
+	r.GET("/api/search", apiHandler.SearchSites)
+	r.GET("/api/sites/:id", apiHandler.SiteDetail)
+
+	auth := r.Group("/")
+	auth.Use(middleware.AuthMiddleware())
+	{
+		auth.GET("/dashboard", pageHandler.UserDashboard)
+		auth.POST("/api/favorites/:id", apiHandler.ToggleFavorite)
+	}
+
+	admin := r.Group("/admin")
+	admin.Use(middleware.AuthMiddleware())
+	admin.Use(middleware.AdminRequired())
+	{
+		admin.GET("/", adminHandler.AdminIndex)
+		admin.GET("/sites", adminHandler.AdminSites)
+		admin.GET("/sites/add", adminHandler.AdminAddSiteForm)
+		admin.POST("/sites/add", adminHandler.AdminAddSite)
+		admin.GET("/sites/edit/:id", adminHandler.AdminEditSiteForm)
+		admin.POST("/sites/edit/:id", adminHandler.AdminEditSite)
+		admin.GET("/sites/delete/:id", adminHandler.AdminDeleteSite)
+	}
+
 	port := config.AppConfig.Port
 	if port == "" {
 		port = "8080"

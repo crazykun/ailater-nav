@@ -11,6 +11,8 @@ type Config struct {
 	Copyright string        `yaml:"copyright"`
 	Admin     AdminConfig   `yaml:"admin"`
 	Session   SessionConfig `yaml:"session"`
+	MySQL     MySQLConfig   `yaml:"mysql"`
+	JWT       JWTConfig     `yaml:"jwt"`
 }
 
 type AdminConfig struct {
@@ -20,6 +22,19 @@ type AdminConfig struct {
 
 type SessionConfig struct {
 	Secret string `yaml:"secret"`
+}
+
+type MySQLConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	Database string `yaml:"database"`
+}
+
+type JWTConfig struct {
+	Secret     string `yaml:"secret"`
+	ExpireDays int    `yaml:"expire_days"`
 }
 
 var AppConfig Config
@@ -44,6 +59,17 @@ func LoadConfig() error {
 		},
 		Session: SessionConfig{
 			Secret: "your-secret-key-here",
+		},
+		MySQL: MySQLConfig{
+			Host:     "localhost",
+			Port:     3306,
+			Username: "root",
+			Password: "",
+			Database: "ai_later",
+		},
+		JWT: JWTConfig{
+			Secret:     "your-jwt-secret-here",
+			ExpireDays: 7,
 		},
 	}
 	overrideFromEnv()
@@ -80,5 +106,30 @@ func overrideFromEnv() {
 
 	if secret := os.Getenv("SESSION_SECRET"); secret != "" {
 		AppConfig.Session.Secret = secret
+	}
+
+	if host := os.Getenv("MYSQL_HOST"); host != "" {
+		AppConfig.MySQL.Host = host
+	}
+
+	if port := os.Getenv("MYSQL_PORT"); port != "" {
+		// parse port
+		AppConfig.MySQL.Port = 3306
+	}
+
+	if user := os.Getenv("MYSQL_USER"); user != "" {
+		AppConfig.MySQL.Username = user
+	}
+
+	if pass := os.Getenv("MYSQL_PASSWORD"); pass != "" {
+		AppConfig.MySQL.Password = pass
+	}
+
+	if db := os.Getenv("MYSQL_DATABASE"); db != "" {
+		AppConfig.MySQL.Database = db
+	}
+
+	if secret := os.Getenv("JWT_SECRET"); secret != "" {
+		AppConfig.JWT.Secret = secret
 	}
 }

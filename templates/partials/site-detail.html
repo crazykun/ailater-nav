@@ -1,0 +1,44 @@
+{{ define "partials/site-detail.html" }}
+{{ if .error }}
+<div class="p-6 text-center">
+    <p class="text-red-500">{{ .error }}</p>
+</div>
+{{ else }}
+<div class="p-6">
+    <div class="flex items-start gap-4 mb-6">
+        {{ if .site.Logo }}
+        <img src="{{ .site.Logo }}" alt="{{ .site.Name }}" class="w-16 h-16 object-contain rounded-lg border border-gray-200">
+        {{ else }}
+        <div class="w-16 h-16 rounded-lg flex items-center justify-center text-white font-bold text-xl" style="background-color: {{ .site.Color }}">
+            {{ .site.Initials }}
+        </div>
+        {{ end }}
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900">{{ .site.Name }}</h2>
+            <p class="text-gray-500 mt-1">{{ .site.Category }}</p>
+        </div>
+    </div>
+    
+    <p class="text-gray-700 mb-4">{{ .site.Description }}</p>
+    
+    <div class="flex flex-wrap gap-2 mb-6">
+        {{ range .site.Tags }}
+        <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-sm">{{ . }}</span>
+        {{ end }}
+    </div>
+    
+    <div class="flex items-center gap-4 text-sm text-gray-500 mb-6">
+        <span>评分: {{ .site.Rating }}/5</span>
+        <span>访问: {{ .site.Visits }} 次</span>
+    </div>
+    
+    <a href="{{ .site.URL }}" target="_blank" rel="noopener noreferrer"
+       class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-all">
+        访问网站
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+        </svg>
+    </a>
+</div>
+{{ end }}
+{{ end }}

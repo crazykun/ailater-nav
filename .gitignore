@@ -1,11 +1,29 @@
-config.yaml
-.trae
-.kiro/
-.vscode/
+# Build output
 ai-navigator
-CLAUDE.md
+ai-later
+*.exe
+
+# Config (contains secrets)
+config.yaml
+
+# IDE
+.vscode/
+.idea/
+.claude/
+.kiro/
+.trae/
+
+# Node (if any frontend build tools used)
 node_modules/
 package-lock.json
-screenshot.js
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data (optional, keep ai.json for migration)
 data/custom.json
-ai-later
+
+# Legacy
+CLAUDE.md
+ai-later-nav
