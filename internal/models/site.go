@@ -43,3 +43,17 @@ type SiteStats struct {
 	WeekPV    int64 `json:"week_pv" db:"week_pv"`
 	WeekUV    int64 `json:"week_uv" db:"week_uv"`
 }
+
+type DashboardStats struct {
+	TotalVisits  int64 `json:"total_visits"`
+	TodayVisits  int64 `json:"today_visits"`
+	WeekVisits   int64 `json:"week_visits"`
+	FeaturedCount int64 `json:"featured_count"`
+	CategoryCount int64 `json:"category_count"`
+	TagCount     int64 `json:"tag_count"`
+}
+
+type CategoryStat struct {
+	Category string `json:"category"`
+	Count    int64  `json:"count"`
+}

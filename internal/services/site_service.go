@@ -170,3 +170,18 @@ func (s *SiteService) GetSearchSuggestions(query string, limit int) ([]string, e
 	}
 	return s.siteRepo.GetSearchSuggestions(query, limit)
 }
+
+func (s *SiteService) GetDashboardStats() (*models.DashboardStats, error) {
+	return s.siteRepo.GetDashboardStats()
+}
+
+func (s *SiteService) GetTopSites(limit int) ([]models.Site, error) {
+	if limit <= 0 {
+		limit = 5
+	}
+	return s.siteRepo.GetTopSites(limit)
+}
+
+func (s *SiteService) GetCategoryStats() ([]models.CategoryStat, error) {
+	return s.siteRepo.GetCategoryStats()
+}

@@ -431,3 +431,97 @@ func (r *SiteRepository) SearchWithTags(query, category, sortBy string, limit, o
 	}
 	return result, total, nil
 }
+
+func (r *SiteRepository) GetDashboardStats() (*models.DashboardStats, error) {
+	stats := &models.DashboardStats{}
+
+	// 总访问量
+	err := r.db.QueryRow("SELECT COALESCE(SUM(visits), 0) FROM sites WHERE deleted = 0").Scan(&stats.TotalVisits)
+	if err != nil {
+		return nil, fmt.Errorf("query total visits: %w", err)
+	}
+
+	// 今日访问量
+	err = r.db.QueryRow(`
+		SELECT COUNT(*) FROM visits WHERE DATE(visited_at) = CURDATE()
+	`).Scan(&stats.TodayVisits)
+	if err != nil {
+		return nil, fmt.Errorf("query today visits: %w", err)
+	}
+
+	// 本周访问量
+	err = r.db.QueryRow(`
+		SELECT COUNT(*) FROM visits WHERE visited_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+	`).Scan(&stats.WeekVisits)
+	if err != nil {
+		return nil, fmt.Errorf("query week visits: %w", err)
+	}
+
+	// 推荐站点数量
+	err = r.db.QueryRow("SELECT COUNT(*) FROM sites WHERE deleted = 0 AND featured = 1").Scan(&stats.FeaturedCount)
+	if err != nil {
+		return nil, fmt.Errorf("query featured count: %w", err)
+	}
+
+	// 分类数量
+	err = r.db.QueryRow("SELECT COUNT(DISTINCT category) FROM sites WHERE deleted = 0 AND category != ''").Scan(&stats.CategoryCount)
+	if err != nil {
+		return nil, fmt.Errorf("query category count: %w", err)
+	}
+
+	// 标签数量
+	err = r.db.QueryRow("SELECT COUNT(*) FROM tags").Scan(&stats.TagCount)
+	if err != nil {
+		return nil, fmt.Errorf("query tag count: %w", err)
+	}
+
+	return stats, nil
+}
+
+func (r *SiteRepository) GetTopSites(limit int) ([]models.Site, error) {
+	rows, err := r.db.Query(`
+		SELECT id, name, url, description, logo, category, rating, visits, featured, deleted, created_at, updated_at
+		FROM sites WHERE deleted = 0
+		ORDER BY visits DESC, rating DESC
+		LIMIT ?
+	`, limit)
+	if err != nil {
+		return nil, fmt.Errorf("query top sites: %w", err)
+	}
+	defer rows.Close()
+
+	var sites []models.Site
+	for rows.Next() {
+		var s models.Site
+		if err := rows.Scan(&s.ID, &s.Name, &s.URL, &s.Description, &s.Logo,
+			&s.Category, &s.Rating, &s.Visits, &s.Featured, &s.Deleted,
+			&s.CreatedAt, &s.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scan site: %w", err)
+		}
+		sites = append(sites, s)
+	}
+	return sites, rows.Err()
+}
+
+func (r *SiteRepository) GetCategoryStats() ([]models.CategoryStat, error) {
+	rows, err := r.db.Query(`
+		SELECT category, COUNT(*) as count
+		FROM sites WHERE deleted = 0 AND category != ''
+		GROUP BY category
+		ORDER BY count DESC
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("query category stats: %w", err)
+	}
+	defer rows.Close()
+
+	var stats []models.CategoryStat
+	for rows.Next() {
+		var cs models.CategoryStat
+		if err := rows.Scan(&cs.Category, &cs.Count); err != nil {
+			return nil, fmt.Errorf("scan category stat: %w", err)
+		}
+		stats = append(stats, cs)
+	}
+	return stats, rows.Err()
+}

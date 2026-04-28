@@ -64,6 +64,19 @@ func (h *PageHandler) HomePage(c *gin.Context) {
 		return
 	}
 
+	if c.GetBool("isLoggedIn") {
+		userService := services.NewUserService()
+		if favIDs, err := userService.GetFavoriteIDs(c.GetInt64("user_id")); err == nil && len(favIDs) > 0 {
+			favSet := make(map[int64]bool, len(favIDs))
+			for _, id := range favIDs {
+				favSet[id] = true
+			}
+			for i := range sites {
+				sites[i].IsFav = favSet[sites[i].ID]
+			}
+		}
+	}
+
 	categories, _ := h.siteService.GetCategories()
 	copyright, _ := c.Get("Copyright")
 
@@ -92,6 +105,19 @@ func (h *PageHandler) SearchPage(c *gin.Context) {
 			"error": "搜索失败",
 		})
 		return
+	}
+
+	if c.GetBool("isLoggedIn") {
+		userService := services.NewUserService()
+		if favIDs, err := userService.GetFavoriteIDs(c.GetInt64("user_id")); err == nil && len(favIDs) > 0 {
+			favSet := make(map[int64]bool, len(favIDs))
+			for _, id := range favIDs {
+				favSet[id] = true
+			}
+			for i := range sites {
+				sites[i].IsFav = favSet[sites[i].ID]
+			}
+		}
 	}
 
 	categories, _ := h.siteService.GetCategories()

@@ -134,3 +134,30 @@ func (r *UserRepository) GetAllUsers() ([]*models.User, error) {
 	}
 	return users, rows.Err()
 }
+
+func (r *UserRepository) CountTodayUsers() (int64, error) {
+	var count int64
+	err := r.db.QueryRow("SELECT COUNT(*) FROM users WHERE DATE(created_at) = CURDATE()").Scan(&count)
+	return count, err
+}
+
+func (r *UserRepository) GetRecentUsers(limit int) ([]*models.User, error) {
+	rows, err := r.db.Query(`
+		SELECT id, username, COALESCE(email, ''), password_hash, role, created_at, updated_at
+		FROM users ORDER BY created_at DESC LIMIT ?
+	`, limit)
+	if err != nil {
+		return nil, fmt.Errorf("query recent users: %w", err)
+	}
+	defer rows.Close()
+
+	var users []*models.User
+	for rows.Next() {
+		var u models.User
+		if err := rows.Scan(&u.ID, &u.Username, &u.Email, &u.PasswordHash, &u.Role, &u.CreatedAt, &u.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scan user: %w", err)
+		}
+		users = append(users, &u)
+	}
+	return users, rows.Err()
+}

@@ -18,13 +18,30 @@ type AdminPageData struct {
 	PageTitle  string
 	PageDesc   string
 	Section    string
+	SiteName   string
+}
+
+// getCommonAdminData returns common template data for admin pages
+func getCommonAdminData(c *gin.Context, section, title, description string) gin.H {
+	return gin.H{
+		"username":        c.GetString("username"),
+		"adminSection":    section,
+		"pageTitle":       title,
+		"pageDescription": description,
+		"SiteName":        c.GetString("SiteName"),
+	}
 }
 
 // AdminIndexData contains data specific to admin dashboard
 type AdminIndexData struct {
 	AdminPageData
-	SiteCount int64
-	UserCount int64
+	SiteCount    int64
+	UserCount    int64
+	TodayUsers   int64
+	DashboardStats *models.DashboardStats
+	TopSites     []models.Site
+	RecentUsers  []*models.User
+	CategoryStats []models.CategoryStat
 }
 
 type AdminHandler struct {
@@ -52,26 +69,45 @@ func (h *AdminHandler) AdminIndex(c *gin.Context) {
 		userCount = 0
 	}
 
-	data := AdminIndexData{
-		AdminPageData: AdminPageData{
-			Username:  c.GetString("username"),
-			IsAdmin:   true,
-			PageTitle: "仪表盘",
-			PageDesc:  "查看后台关键指标和系统状态。",
-			Section:   "dashboard",
-		},
-		SiteCount: siteCount,
-		UserCount: userCount,
+	todayUsers, err := h.userService.CountTodayUsers()
+	if err != nil {
+		log.Printf("Failed to get today users: %v", err)
+		todayUsers = 0
 	}
 
-	c.HTML(http.StatusOK, "admin-index.html", gin.H{
-		"username":        data.Username,
-		"siteCount":       data.SiteCount,
-		"userCount":       data.UserCount,
-		"adminSection":    data.Section,
-		"pageTitle":       data.PageTitle,
-		"pageDescription": data.PageDesc,
-	})
+	dashboardStats, err := h.siteService.GetDashboardStats()
+	if err != nil {
+		log.Printf("Failed to get dashboard stats: %v", err)
+		dashboardStats = &models.DashboardStats{}
+	}
+
+	topSites, err := h.siteService.GetTopSites(5)
+	if err != nil {
+		log.Printf("Failed to get top sites: %v", err)
+		topSites = []models.Site{}
+	}
+
+	recentUsers, err := h.userService.GetRecentUsers(5)
+	if err != nil {
+		log.Printf("Failed to get recent users: %v", err)
+		recentUsers = []*models.User{}
+	}
+
+	categoryStats, err := h.siteService.GetCategoryStats()
+	if err != nil {
+		log.Printf("Failed to get category stats: %v", err)
+		categoryStats = []models.CategoryStat{}
+	}
+
+	common := getCommonAdminData(c, "dashboard", "仪表盘", "查看后台关键指标和系统状态。")
+	common["siteCount"] = siteCount
+	common["userCount"] = userCount
+	common["todayUsers"] = todayUsers
+	common["dashboardStats"] = dashboardStats
+	common["topSites"] = topSites
+	common["recentUsers"] = recentUsers
+	common["categoryStats"] = categoryStats
+	c.HTML(http.StatusOK, "admin-index.html", common)
 }
 
 func (h *AdminHandler) AdminSites(c *gin.Context) {
@@ -83,24 +119,20 @@ func (h *AdminHandler) AdminSites(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "admin-sites.html", gin.H{
-		"sites":           sites,
-		"username":        c.GetString("username"),
-		"adminSection":    "sites",
-		"pageTitle":       "站点管理",
-		"pageDescription": "集中维护站点资料、标签和推荐状态。",
-	})
+	for i, j := 0, len(sites)-1; i < j; i, j = i+1, j-1 {
+		sites[i], sites[j] = sites[j], sites[i]
+	}
+
+	common := getCommonAdminData(c, "sites", "站点管理", "集中维护站点资料、标签和推荐状态。")
+	common["sites"] = sites
+	c.HTML(http.StatusOK, "admin-sites.html", common)
 }
 
 func (h *AdminHandler) AdminAddSiteForm(c *gin.Context) {
 	categories, _ := h.siteService.GetCategories()
-	c.HTML(http.StatusOK, "admin-add-site.html", gin.H{
-		"categories":      categories,
-		"username":        c.GetString("username"),
-		"adminSection":    "sites",
-		"pageTitle":       "添加站点",
-		"pageDescription": "创建新的站点条目并设置分类、标签和推荐状态。",
-	})
+	common := getCommonAdminData(c, "sites", "添加站点", "创建新的站点条目并设置分类、标签和推荐状态。")
+	common["categories"] = categories
+	c.HTML(http.StatusOK, "admin-add-site.html", common)
 }
 
 func (h *AdminHandler) AdminAddSite(c *gin.Context) {
@@ -133,16 +165,12 @@ func (h *AdminHandler) AdminAddSite(c *gin.Context) {
 
 	if _, err := h.siteService.Create(site, tags); err != nil {
 		categories, _ := h.siteService.GetCategories()
-		c.HTML(http.StatusOK, "admin-add-site.html", gin.H{
-			"error":           "创建失败: " + err.Error(),
-			"site":            site,
-			"tagsString":      tagsStr,
-			"categories":      categories,
-			"username":        c.GetString("username"),
-			"adminSection":    "sites",
-			"pageTitle":       "添加站点",
-			"pageDescription": "创建新的站点条目并设置分类、标签和推荐状态。",
-		})
+		common := getCommonAdminData(c, "sites", "添加站点", "创建新的站点条目并设置分类、标签和推荐状态。")
+		common["error"] = "创建失败: " + err.Error()
+		common["site"] = site
+		common["tagsString"] = tagsStr
+		common["categories"] = categories
+		c.HTML(http.StatusOK, "admin-add-site.html", common)
 		return
 	}
 
@@ -167,15 +195,11 @@ func (h *AdminHandler) AdminEditSiteForm(c *gin.Context) {
 	}
 
 	categories, _ := h.siteService.GetCategories()
-	c.HTML(http.StatusOK, "admin-edit-site.html", gin.H{
-		"site":            site,
-		"tagsString":      strings.Join(site.Tags, ", "),
-		"categories":      categories,
-		"username":        c.GetString("username"),
-		"adminSection":    "sites",
-		"pageTitle":       "编辑站点",
-		"pageDescription": "调整站点信息并维护推荐状态。",
-	})
+	common := getCommonAdminData(c, "sites", "编辑站点", "调整站点信息并维护推荐状态。")
+	common["site"] = site
+	common["tagsString"] = strings.Join(site.Tags, ", ")
+	common["categories"] = categories
+	c.HTML(http.StatusOK, "admin-edit-site.html", common)
 }
 
 func (h *AdminHandler) AdminEditSite(c *gin.Context) {
@@ -217,16 +241,12 @@ func (h *AdminHandler) AdminEditSite(c *gin.Context) {
 
 	if err := h.siteService.Update(site, tags); err != nil {
 		categories, _ := h.siteService.GetCategories()
-		c.HTML(http.StatusOK, "admin-edit-site.html", gin.H{
-			"error":           "更新失败: " + err.Error(),
-			"site":            site,
-			"tagsString":      tagsStr,
-			"categories":      categories,
-			"username":        c.GetString("username"),
-			"adminSection":    "sites",
-			"pageTitle":       "编辑站点",
-			"pageDescription": "调整站点信息并维护推荐状态。",
-		})
+		common := getCommonAdminData(c, "sites", "编辑站点", "调整站点信息并维护推荐状态。")
+		common["error"] = "更新失败: " + err.Error()
+		common["site"] = site
+		common["tagsString"] = tagsStr
+		common["categories"] = categories
+		c.HTML(http.StatusOK, "admin-edit-site.html", common)
 		return
 	}
 
@@ -257,26 +277,18 @@ func (h *AdminHandler) AdminUsers(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "admin-users.html", gin.H{
-		"users":           users,
-		"username":        c.GetString("username"),
-		"adminSection":    "users",
-		"pageTitle":       "用户管理",
-		"pageDescription": "查看注册用户和角色信息。",
-	})
+	common := getCommonAdminData(c, "users", "用户管理", "查看注册用户和角色信息。")
+	common["users"] = users
+	c.HTML(http.StatusOK, "admin-users.html", common)
 }
 
 func (h *AdminHandler) AdminSettingsForm(c *gin.Context) {
 	ss := services.GetSettingService()
 	settings := ss.GetAllSettings()
 
-	c.HTML(http.StatusOK, "admin-settings.html", gin.H{
-		"settings":        settings,
-		"username":        c.GetString("username"),
-		"adminSection":    "settings",
-		"pageTitle":       "系统设置",
-		"pageDescription": "维护站点名称和版权信息。",
-	})
+	common := getCommonAdminData(c, "settings", "系统设置", "维护站点名称和版权信息。")
+	common["settings"] = settings
+	c.HTML(http.StatusOK, "admin-settings.html", common)
 }
 
 func (h *AdminHandler) AdminSettingsSave(c *gin.Context) {
@@ -288,26 +300,18 @@ func (h *AdminHandler) AdminSettingsSave(c *gin.Context) {
 
 	if err := ss.UpdateMultiple(updates); err != nil {
 		settings := ss.GetAllSettings()
-		c.HTML(http.StatusOK, "admin-settings.html", gin.H{
-			"settings":        settings,
-			"error":           "保存失败: " + err.Error(),
-			"username":        c.GetString("username"),
-			"adminSection":    "settings",
-			"pageTitle":       "系统设置",
-			"pageDescription": "维护站点名称和版权信息。",
-		})
+		common := getCommonAdminData(c, "settings", "系统设置", "维护站点名称和版权信息。")
+		common["settings"] = settings
+		common["error"] = "保存失败: " + err.Error()
+		c.HTML(http.StatusOK, "admin-settings.html", common)
 		return
 	}
 
 	settings := ss.GetAllSettings()
-	c.HTML(http.StatusOK, "admin-settings.html", gin.H{
-		"settings":        settings,
-		"success":         "设置已保存",
-		"username":        c.GetString("username"),
-		"adminSection":    "settings",
-		"pageTitle":       "系统设置",
-		"pageDescription": "维护站点名称和版权信息。",
-	})
+	common := getCommonAdminData(c, "settings", "系统设置", "维护站点名称和版权信息。")
+	common["settings"] = settings
+	common["success"] = "设置已保存"
+	c.HTML(http.StatusOK, "admin-settings.html", common)
 }
 
 func (h *AdminHandler) AdminStats(c *gin.Context) {
@@ -346,11 +350,7 @@ func (h *AdminHandler) AdminStats(c *gin.Context) {
 		sitesWithStats = append(sitesWithStats, sws)
 	}
 
-	c.HTML(http.StatusOK, "admin-stats.html", gin.H{
-		"sites":           sitesWithStats,
-		"username":        c.GetString("username"),
-		"adminSection":    "stats",
-		"pageTitle":       "访问统计",
-		"pageDescription": "按站点查看 PV / UV 趋势概览。",
-	})
+	common := getCommonAdminData(c, "stats", "访问统计", "按站点查看 PV / UV 趋势概览。")
+	common["sites"] = sitesWithStats
+	c.HTML(http.StatusOK, "admin-stats.html", common)
 }

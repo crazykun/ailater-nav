@@ -10,7 +10,7 @@
 
 {{ define "admin-sidebar" }}
 <aside class="admin-sidebar">
-  <div class="admin-sidebar-brand">后台管理</div>
+  <div class="admin-sidebar-brand">{{ .SiteName }} 后台管理</div>
   <nav class="admin-sidebar-nav">
     <a href="/admin/" class="admin-nav-item {{ if eq .adminSection "dashboard" }}admin-nav-item-active{{ end }}">仪表盘</a>
     <a href="/admin/sites" class="admin-nav-item {{ if eq .adminSection "sites" }}admin-nav-item-active{{ end }}">站点管理</a>
@@ -18,7 +18,6 @@
     <a href="/admin/users" class="admin-nav-item {{ if eq .adminSection "users" }}admin-nav-item-active{{ end }}">用户管理</a>
     <a href="/admin/settings" class="admin-nav-item {{ if eq .adminSection "settings" }}admin-nav-item-active{{ end }}">系统设置</a>
   </nav>
-  <a href="/" class="admin-nav-back">返回前台</a>
 </aside>
 {{ end }}
 
@@ -29,6 +28,9 @@
     <h1 class="admin-page-title">{{ .pageTitle }}</h1>
     {{ if .pageDescription }}<p class="admin-page-description">{{ .pageDescription }}</p>{{ end }}
   </div>
-  <div class="admin-topbar-user">{{ .username }}</div>
+  <div style="display: flex; align-items: center; gap: 1rem;">
+    <span class="admin-topbar-user">{{ .username }}</span>
+    <a href="/" class="admin-btn-secondary" style="font-size: 0.8125rem; padding: 0.5rem 1rem;">返回前台</a>
+  </div>
 </header>
 {{ end }}

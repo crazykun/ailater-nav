@@ -154,3 +154,14 @@ func (s *UserService) RegisterAdmin(username, password string) (*models.User, er
 	user.ID = id
 	return user, nil
 }
+
+func (s *UserService) CountTodayUsers() (int64, error) {
+	return s.userRepo.CountTodayUsers()
+}
+
+func (s *UserService) GetRecentUsers(limit int) ([]*models.User, error) {
+	if limit <= 0 {
+		limit = 5
+	}
+	return s.userRepo.GetRecentUsers(limit)
+}

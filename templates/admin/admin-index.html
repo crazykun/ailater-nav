@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <title>仪表盘 - AI导航</title>
+    <title>仪表盘 - {{ .SiteName }}</title>
     {{ template "admin-head" . }}
 </head>
 <body class="admin-body">
@@ -19,7 +19,124 @@
                         <span class="admin-stat-label">用户总数</span>
                         <span class="admin-stat-value">{{ .userCount }}</span>
                     </a>
+                    <div class="admin-stat-card">
+                        <span class="admin-stat-label">今日新增用户</span>
+                        <span class="admin-stat-value">{{ .todayUsers }}</span>
+                    </div>
+                    <div class="admin-stat-card">
+                        <span class="admin-stat-label">推荐站点</span>
+                        <span class="admin-stat-value">{{ .dashboardStats.FeaturedCount }}</span>
+                    </div>
+                    <div class="admin-stat-card">
+                        <span class="admin-stat-label">总访问量</span>
+                        <span class="admin-stat-value">{{ .dashboardStats.TotalVisits }}</span>
+                    </div>
+                    <div class="admin-stat-card">
+                        <span class="admin-stat-label">今日访问量</span>
+                        <span class="admin-stat-value">{{ .dashboardStats.TodayVisits }}</span>
+                    </div>
+                    <div class="admin-stat-card">
+                        <span class="admin-stat-label">本周访问量</span>
+                        <span class="admin-stat-value">{{ .dashboardStats.WeekVisits }}</span>
+                    </div>
+                    <div class="admin-stat-card">
+                        <span class="admin-stat-label">分类数量</span>
+                        <span class="admin-stat-value">{{ .dashboardStats.CategoryCount }}</span>
+                    </div>
+                    <div class="admin-stat-card">
+                        <span class="admin-stat-label">标签数量</span>
+                        <span class="admin-stat-value">{{ .dashboardStats.TagCount }}</span>
+                    </div>
                 </section>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+                    <section class="admin-surface">
+                        <h2 class="admin-section-title">热门站点 Top 5</h2>
+                        {{ if .topSites }}
+                        <div class="admin-table-wrapper">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th class="admin-table-head">站点名称</th>
+                                        <th class="admin-table-head">分类</th>
+                                        <th class="admin-table-head text-right">访问量</th>
+                                        <th class="admin-table-head text-right">评分</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{ range .topSites }}
+                                    <tr>
+                                        <td class="admin-table-cell">
+                                            <a href="/admin/sites/edit/{{ .ID }}" class="admin-link">{{ .Name }}</a>
+                                        </td>
+                                        <td class="admin-table-cell">
+                                            <span class="admin-badge">{{ .Category }}</span>
+                                        </td>
+                                        <td class="admin-table-cell text-right admin-metric-number">{{ .Visits }}</td>
+                                        <td class="admin-table-cell text-right admin-metric-number">{{ printf "%.1f" .Rating }}</td>
+                                    </tr>
+                                    {{ end }}
+                                </tbody>
+                            </table>
+                        </div>
+                        {{ else }}
+                        <p style="color: #64748b; font-size: 0.875rem;">暂无站点数据</p>
+                        {{ end }}
+                    </section>
+
+                    <section class="admin-surface">
+                        <h2 class="admin-section-title">最近注册用户</h2>
+                        {{ if .recentUsers }}
+                        <div class="admin-table-wrapper">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th class="admin-table-head">用户名</th>
+                                        <th class="admin-table-head">角色</th>
+                                        <th class="admin-table-head">注册时间</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{ range .recentUsers }}
+                                    <tr>
+                                        <td class="admin-table-cell">
+                                            <span style="font-weight: 600; color: #0f172a;">{{ .Username }}</span>
+                                        </td>
+                                        <td class="admin-table-cell">
+                                            {{ if eq .Role "admin" }}
+                                            <span class="admin-badge" style="background: rgba(239, 68, 68, 0.12); color: #dc2626;">管理员</span>
+                                            {{ else }}
+                                            <span class="admin-badge">普通用户</span>
+                                            {{ end }}
+                                        </td>
+                                        <td class="admin-table-cell" style="font-size: 0.875rem; color: #64748b;">
+                                            {{ .CreatedAt.Format "2006-01-02 15:04" }}
+                                        </td>
+                                    </tr>
+                                    {{ end }}
+                                </tbody>
+                            </table>
+                        </div>
+                        {{ else }}
+                        <p style="color: #64748b; font-size: 0.875rem;">暂无用户数据</p>
+                        {{ end }}
+                    </section>
+                </div>
+
+                {{ if .categoryStats }}
+                <section class="admin-surface" style="margin-top: 1.5rem;">
+                    <h2 class="admin-section-title">分类统计</h2>
+                    <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                        {{ range .categoryStats }}
+                        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; background: rgba(99, 102, 241, 0.08); border-radius: 0.75rem;">
+                            <span style="font-weight: 600; color: #0f172a;">{{ .Category }}</span>
+                            <span class="admin-metric-number" style="color: #4f46e5;">{{ .Count }}</span>
+                        </div>
+                        {{ end }}
+                    </div>
+                </section>
+                {{ end }}
+
                 <section class="admin-surface admin-status-panel">
                     <h2 class="admin-section-title">系统状态</h2>
                     <p class="admin-status-ok">运行中</p>

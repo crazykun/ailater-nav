@@ -639,6 +639,129 @@ html {
     color: #b91c1c;
 }
 
+.admin-btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease-in-out;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.admin-btn-icon-edit {
+    color: #2563eb;
+    background: rgba(37, 99, 235, 0.08);
+}
+
+.admin-btn-icon-edit:hover {
+    background: rgba(37, 99, 235, 0.16);
+    transform: translateY(-1px);
+}
+
+.admin-btn-icon-danger {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.08);
+}
+
+.admin-btn-icon-danger:hover {
+    background: rgba(220, 38, 38, 0.16);
+    transform: translateY(-1px);
+}
+
+.admin-btn-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.875rem;
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+    color: white;
+    padding: 0.625rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+    border: none;
+    cursor: pointer;
+}
+
+.admin-btn-danger:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px -8px rgba(220, 38, 38, 0.4);
+}
+
+.admin-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: adminModalFadeIn 0.2s ease-out;
+}
+
+.admin-modal {
+    background: white;
+    border-radius: 1.25rem;
+    padding: 2rem;
+    width: 100%;
+    max-width: 24rem;
+    text-align: center;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: adminModalSlideUp 0.25s ease-out;
+}
+
+.admin-modal-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+    margin-bottom: 1rem;
+}
+
+.admin-modal-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.5rem;
+}
+
+.admin-modal-text {
+    font-size: 0.875rem;
+    color: #6b7280;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+
+.admin-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+.admin-modal-actions .admin-btn-secondary,
+.admin-modal-actions .admin-btn-danger {
+    flex: 1;
+}
+
+@keyframes adminModalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes adminModalSlideUp {
+    from { opacity: 0; transform: translateY(10px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .admin-metric-number {
     font-size: 1.125rem;
     font-weight: 700;
