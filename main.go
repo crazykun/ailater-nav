@@ -42,6 +42,10 @@ func main() {
 		log.Fatalf("Failed to run migrations: %v", err)
 	}
 
+	if err := middleware.InitAccessLogger(); err != nil {
+		log.Fatalf("Failed to init access logger: %v", err)
+	}
+
 	settingService := services.GetSettingService()
 	if err := settingService.LoadCache(); err != nil {
 		log.Printf("Warning: could not load settings: %v", err)
@@ -60,6 +64,7 @@ func main() {
 	r.Use(middleware.OptionalAuth())
 	r.Use(middleware.AddGlobalContext())
 	r.Use(middleware.SetupRequired())
+	r.Use(middleware.AccessLog())
 
 	pageHandler := handlers.NewPageHandler(pageTemplates)
 	apiHandler := handlers.NewAPIHandler()

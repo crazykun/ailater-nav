@@ -10,3 +10,11 @@ mysql:
 jwt:
   secret: your-jwt-secret-change-me
   expire_days: 7
+
+log:
+  access_log:
+    enabled: true
+    file_path: logs/access.log
+    max_size: 100
+    max_backups: 7
+    max_age: 7

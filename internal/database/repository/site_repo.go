@@ -183,6 +183,7 @@ func (r *SiteRepository) GetSearchSuggestions(query string, limit int) ([]string
 		return nil, nil
 	}
 
+	searchPattern := "%" + query + "%"
 	rows, err := r.db.Query(`
 		SELECT DISTINCT name FROM sites 
 		WHERE deleted = 0 AND (name LIKE ? OR description LIKE ? OR id IN (
@@ -191,7 +192,7 @@ func (r *SiteRepository) GetSearchSuggestions(query string, limit int) ([]string
 		))
 		ORDER BY rating DESC, visits DESC 
 		LIMIT ?
-	`, "%"+query+"%", "%"+query+"%", "%"+query+"%", limit)
+	`, searchPattern, searchPattern, searchPattern, limit)
 	if err != nil {
 		return nil, fmt.Errorf("query suggestions: %w", err)
 	}

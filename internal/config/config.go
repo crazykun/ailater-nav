@@ -12,6 +12,7 @@ type Config struct {
 	Port  string      `yaml:"port"`
 	MySQL MySQLConfig `yaml:"mysql"`
 	JWT   JWTConfig   `yaml:"jwt"`
+	Log   LogConfig   `yaml:"log"`
 }
 
 type MySQLConfig struct {
@@ -25,6 +26,18 @@ type MySQLConfig struct {
 type JWTConfig struct {
 	Secret     string `yaml:"secret"`
 	ExpireDays int    `yaml:"expire_days"`
+}
+
+type LogConfig struct {
+	AccessLog AccessLogConfig `yaml:"access_log"`
+}
+
+type AccessLogConfig struct {
+	Enabled    bool   `yaml:"enabled"`
+	FilePath   string `yaml:"file_path"`
+	MaxSize    int    `yaml:"max_size"`
+	MaxBackups int    `yaml:"max_backups"`
+	MaxAge     int    `yaml:"max_age"`
 }
 
 var AppConfig Config
@@ -50,6 +63,15 @@ func LoadConfig() error {
 		JWT: JWTConfig{
 			Secret:     "your-jwt-secret-here",
 			ExpireDays: 7,
+		},
+		Log: LogConfig{
+			AccessLog: AccessLogConfig{
+				Enabled:    true,
+				FilePath:   "logs/access.log",
+				MaxSize:    100,
+				MaxBackups: 7,
+				MaxAge:     7,
+			},
 		},
 	}
 	return overrideFromEnv()
