@@ -22,5 +22,5 @@ func BuildPageTemplates(root fs.FS) map[string]*template.Template {
 }
 
 func BuildSharedTemplates(root fs.FS) *template.Template {
-	return template.Must(template.New("shared.html").Funcs(funcMap).ParseFS(root, "error.html", "admin/*.html", "partials/*.html"))
+	return template.Must(template.New("shared.html").Funcs(funcMap).ParseFS(root, "error.html", "admin/admin-index.html", "admin/admin-sites.html", "admin/admin-add-site.html", "admin/admin-edit-site.html", "admin/admin-users.html", "admin/admin-settings.html", "admin/admin-stats.html", "partials/*.html"))
 }

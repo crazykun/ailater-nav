@@ -1,0 +1,8 @@
+{{ define "admin-flash" }}
+  {{ if .error }}
+    <div class="admin-alert admin-alert-error">{{ .error }}</div>
+  {{ end }}
+  {{ if .success }}
+    <div class="admin-alert admin-alert-success">{{ .success }}</div>
+  {{ end }}
+{{ end }}

@@ -1,88 +1,53 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>用户管理 - AI导航</title>
-    <script src="/static/css/tailwind-3.4.17.css"></script>
+    {{ template "admin-head" . }}
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <div class="flex h-screen overflow-hidden">
-        <!-- Sidebar -->
-        <div class="bg-gray-800 text-white w-64 flex-shrink-0">
-            <div class="p-4 border-b border-gray-700">
-                <h1 class="text-xl font-bold">后台管理</h1>
-            </div>
-            <nav class="mt-5 flex flex-col h-[calc(100%-65px)]">
-                <a href="/admin" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-                    仪表盘
-                </a>
-                <a href="/admin/sites" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                    站点管理
-                </a>
-                <a href="/admin/stats" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                    访问统计
-                </a>
-                <a href="/admin/users" class="flex items-center px-4 py-3 bg-gray-700 text-white">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                    用户管理
-                </a>
-                <a href="/admin/settings" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    系统设置
-                </a>
-                <div class="mt-auto">
-                    <a href="/" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                        返回前台
-                    </a>
-                </div>
-            </nav>
-        </div>
+<body class="admin-body">
+    <div class="admin-shell">
+        {{ template "admin-sidebar" . }}
+        <div class="admin-main">
+            {{ template "admin-topbar" . }}
+            <main class="admin-content">
+                <section class="admin-toolbar-row">
+                    <div class="admin-toolbar-meta">
+                        <span class="admin-chip">{{ len .users }} 个用户</span>
+                    </div>
+                </section>
 
-        <!-- Main Content -->
-        <div class="flex-1 flex flex-col overflow-hidden">
-            <header class="bg-white shadow-sm z-10">
-                <div class="flex items-center justify-between px-6 py-4">
-                    <h2 class="text-lg font-medium text-gray-800">用户管理</h2>
-                    <span class="text-sm text-gray-500">共 {{ len .users }} 个用户</span>
-                </div>
-            </header>
-
-            <main class="flex-1 overflow-y-auto p-6 bg-gray-100">
-                <div class="bg-white rounded-lg shadow overflow-hidden">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">用户名</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">邮箱</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">角色</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">注册时间</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            {{ range .users }}
-                            <tr>
-                                <td class="px-6 py-4 text-sm text-gray-500">{{ .ID }}</td>
-                                <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ .Username }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-500">{{ if .Email }}{{ .Email }}{{ else }}-{{ end }}</td>
-                                <td class="px-6 py-4">
-                                    {{ if eq .Role "admin" }}
-                                    <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">管理员</span>
-                                    {{ else }}
-                                    <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">普通用户</span>
-                                    {{ end }}
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-500">{{ .CreatedAt.Format "2006-01-02 15:04" }}</td>
-                            </tr>
-                            {{ end }}
-                        </tbody>
-                    </table>
-                </div>
+                <section class="admin-surface overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="admin-table min-w-full">
+                            <thead>
+                                <tr>
+                                    <th class="admin-table-head text-left">ID</th>
+                                    <th class="admin-table-head text-left">用户名</th>
+                                    <th class="admin-table-head text-left">邮箱</th>
+                                    <th class="admin-table-head text-left">角色</th>
+                                    <th class="admin-table-head text-left">注册时间</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ range .users }}
+                                <tr>
+                                    <td class="admin-table-cell">{{ .ID }}</td>
+                                    <td class="admin-table-cell font-medium">{{ .Username }}</td>
+                                    <td class="admin-table-cell">{{ if .Email }}{{ .Email }}{{ else }}-{{ end }}</td>
+                                    <td class="admin-table-cell">
+                                        {{ if eq .Role "admin" }}
+                                        <span class="admin-badge admin-badge-danger">管理员</span>
+                                        {{ else }}
+                                        <span class="admin-badge">普通用户</span>
+                                        {{ end }}
+                                    </td>
+                                    <td class="admin-table-cell">{{ .CreatedAt.Format "2006-01-02 15:04" }}</td>
+                                </tr>
+                                {{ end }}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
             </main>
         </div>
     </div>
