@@ -26,6 +26,11 @@ func (s *SiteService) GetAll() ([]models.SiteDisplay, error) {
 		return nil, err
 	}
 
+	todayUVMap, err := s.siteRepo.GetAllSitesTodayUV()
+	if err != nil {
+		todayUVMap = make(map[int64]int64)
+	}
+
 	var result []models.SiteDisplay
 	for _, swt := range sites {
 		result = append(result, models.SiteDisplay{
@@ -33,6 +38,7 @@ func (s *SiteService) GetAll() ([]models.SiteDisplay, error) {
 			Tags:     swt.Tags,
 			Color:    utils.GenerateColorFromName(swt.Name),
 			Initials: utils.GetInitialsFromName(swt.Name),
+			TodayUV:  todayUVMap[swt.ID],
 		})
 	}
 	return result, nil
@@ -114,8 +120,8 @@ func (s *SiteService) GetCategories() ([]string, error) {
 	return s.siteRepo.GetCategories()
 }
 
-func (s *SiteService) IncrementVisits(siteID int64, ip string) error {
-	return s.siteRepo.IncrementVisits(siteID, ip)
+func (s *SiteService) IncrementVisits(siteID int64, ip string, userID *int64) error {
+	return s.siteRepo.IncrementVisits(siteID, ip, userID)
 }
 
 func (s *SiteService) GetSiteStats(siteID int64) (*models.SiteStats, error) {
@@ -140,6 +146,11 @@ func (s *SiteService) Search(query, category, sortBy string, page, pageSize int)
 		return nil, 0, err
 	}
 
+	todayUVMap, err := s.siteRepo.GetAllSitesTodayUV()
+	if err != nil {
+		todayUVMap = make(map[int64]int64)
+	}
+
 	var result []models.SiteDisplay
 	for _, swt := range sites {
 		result = append(result, models.SiteDisplay{
@@ -147,6 +158,7 @@ func (s *SiteService) Search(query, category, sortBy string, page, pageSize int)
 			Tags:     swt.Tags,
 			Color:    utils.GenerateColorFromName(swt.Name),
 			Initials: utils.GetInitialsFromName(swt.Name),
+			TodayUV:  todayUVMap[swt.ID],
 		})
 	}
 	return result, total, nil

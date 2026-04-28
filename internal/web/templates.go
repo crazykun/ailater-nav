@@ -20,3 +20,7 @@ func BuildPageTemplates(root fs.FS) map[string]*template.Template {
 		"setup.html":     template.Must(template.New("setup.html").Funcs(funcMap).ParseFS(root, "layout.html", "setup.html", "partials/*.html")),
 	}
 }
+
+func BuildSharedTemplates(root fs.FS) *template.Template {
+	return template.Must(template.New("shared.html").Funcs(funcMap).ParseFS(root, "error.html", "admin/*.html", "partials/*.html"))
+}

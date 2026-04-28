@@ -93,6 +93,11 @@
                                 {{ . }}
                             </span>
                             {{ end }}
+                            {{ if .TodayUV }}
+                            <span class="today-uv px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 border border-green-100 dark:border-green-800">
+                                今日 {{ .TodayUV }} 访客
+                            </span>
+                            {{ end }}
                         </div>
                         
                         <div class="flex items-center gap-1">
@@ -111,6 +116,7 @@
                             
                             <!-- 访问按钮 -->
                             <a href="{{ .URL }}" target="_blank" rel="noopener noreferrer"
+                               onclick="recordVisitAndGo({{ .ID }}, '{{ .URL }}', event)"
                                class="p-1.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 hover:scale-110 hover:shadow-lg transition-all duration-200"
                                title="访问网站">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -142,6 +148,36 @@
         </div>
     </div>
 </div>
+
+<script>
+function recordVisitAndGo(siteID, url, event) {
+    event.preventDefault();
+    fetch('/api/sites/' + siteID + '/visit', { method: 'POST' })
+        .then(function() {
+            // 更新今日 UV 显示
+            var card = event.target.closest('.card-hover');
+            if (card) {
+                var todayUVSpan = card.querySelector('.today-uv');
+                if (todayUVSpan) {
+                    var currentUV = parseInt(todayUVSpan.textContent) || 0;
+                    todayUVSpan.textContent = currentUV + 1;
+                } else {
+                    // 如果没有今日 UV 标签，创建一个
+                    var tagContainer = card.querySelector('.flex.flex-wrap');
+                    if (tagContainer) {
+                        var newSpan = document.createElement('span');
+                        newSpan.className = 'today-uv px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 border border-green-100 dark:border-green-800';
+                        newSpan.textContent = '今日 1 访客';
+                        tagContainer.appendChild(newSpan);
+                    }
+                }
+            }
+        })
+        .finally(function() {
+            window.open(url, '_blank', 'noopener,noreferrer');
+        });
+}
+</script>
 
 <!-- 用于 HTMX 搜索结果的模板 -->
 <template id="site-card-template">

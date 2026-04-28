@@ -8,7 +8,6 @@ import (
 	"ai-later-nav/internal/services"
 	"ai-later-nav/internal/web"
 	"embed"
-	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
@@ -55,7 +54,7 @@ func main() {
 
 	tmplSub, _ := fs.Sub(templateFS, "templates")
 	pageTemplates := web.BuildPageTemplates(tmplSub)
-	sharedTemplates := template.Must(template.ParseFS(tmplSub, "error.html", "admin/*.html", "partials/*.html"))
+	sharedTemplates := web.BuildSharedTemplates(tmplSub)
 	r.SetHTMLTemplate(sharedTemplates)
 
 	staticSub, _ := fs.Sub(staticFS, "static")
@@ -87,6 +86,7 @@ func main() {
 	r.GET("/api/search/suggest", apiHandler.SearchSuggestions)
 	r.GET("/api/sites/:id", apiHandler.SiteDetail)
 	r.GET("/api/sites/:id/stats", apiHandler.SiteStats)
+	r.POST("/api/sites/:id/visit", apiHandler.RecordVisit)
 
 	auth := r.Group("/")
 	auth.Use(middleware.AuthMiddleware())

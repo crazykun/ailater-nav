@@ -31,6 +31,7 @@ type SiteDisplay struct {
 	Color    string   `json:"color"`
 	Initials string   `json:"initials"`
 	IsFav    bool     `json:"is_fav"`
+	TodayUV  int64    `json:"today_uv"`
 }
 
 type SiteStats struct {

@@ -84,7 +84,13 @@ func (h *APIHandler) SiteDetail(c *gin.Context) {
 	}
 
 	ip := c.ClientIP()
-	if err := h.siteService.IncrementVisits(id, ip); err != nil {
+	var userID *int64
+	if uid, exists := c.Get("user_id"); exists {
+		if id, ok := uid.(int64); ok {
+			userID = &id
+		}
+	}
+	if err := h.siteService.IncrementVisits(id, ip, userID); err != nil {
 		// 记录日志但不影响响应
 		// log.Printf("Failed to record visit: %v", err)
 	}
@@ -114,6 +120,28 @@ func (h *APIHandler) SiteStats(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, stats)
+}
+
+func (h *APIHandler) RecordVisit(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的站点 ID"})
+		return
+	}
+
+	ip := c.ClientIP()
+	var userID *int64
+	if uid, exists := c.Get("user_id"); exists {
+		if id, ok := uid.(int64); ok {
+			userID = &id
+		}
+	}
+	if err := h.siteService.IncrementVisits(id, ip, userID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "记录访问失败"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true})
 }
 
 func (h *APIHandler) Login(c *gin.Context) {

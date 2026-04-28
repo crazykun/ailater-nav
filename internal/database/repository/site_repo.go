@@ -286,12 +286,12 @@ func (r *SiteRepository) SetTags(siteID int64, tagNames []string) error {
 	return tx.Commit()
 }
 
-func (r *SiteRepository) IncrementVisits(siteID int64, ip string) error {
+func (r *SiteRepository) IncrementVisits(siteID int64, ip string, userID *int64) error {
 	_, err := r.db.Exec("UPDATE sites SET visits = visits + 1 WHERE id = ?", siteID)
 	if err != nil {
 		return fmt.Errorf("increment visits: %w", err)
 	}
-	_, err = r.db.Exec("INSERT INTO visits (site_id, ip) VALUES (?, ?)", siteID, ip)
+	_, err = r.db.Exec("INSERT INTO visits (site_id, ip, user_id) VALUES (?, ?, ?)", siteID, ip, userID)
 	return err
 }
 
@@ -357,6 +357,31 @@ func (r *SiteRepository) GetAllSitesStats() ([]models.SiteStats, error) {
 		stats = append(stats, s)
 	}
 	return stats, nil
+}
+
+func (r *SiteRepository) GetAllSitesTodayUV() (map[int64]int64, error) {
+	rows, err := r.db.Query(`
+		SELECT 
+			site_id,
+			COUNT(DISTINCT ip) as today_uv
+		FROM visits 
+		WHERE DATE(visited_at) = CURDATE()
+		GROUP BY site_id
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("query today uv: %w", err)
+	}
+	defer rows.Close()
+
+	result := make(map[int64]int64)
+	for rows.Next() {
+		var siteID, todayUV int64
+		if err := rows.Scan(&siteID, &todayUV); err != nil {
+			return nil, fmt.Errorf("scan today uv: %w", err)
+		}
+		result[siteID] = todayUV
+	}
+	return result, nil
 }
 
 func (r *SiteRepository) GetAllWithTags() ([]models.SiteWithTags, error) {
