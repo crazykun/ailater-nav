@@ -18,29 +18,33 @@ go run main.go
 # Build binary
 go build -o ai-later-nav
 
+# Restart (stop old process, rebuild, start)
+./scripts/restart.sh
+
+# Stop running process
+./scripts/stop.sh
+
 # CI pipeline runs these in order:
 go build -v ./...
 go test -v ./...
 ```
 
-No tests exist yet. `go test` passes vacuously. No linter, formatter, or typecheck tooling configured.
+No linter, formatter, or typecheck tooling configured.
 
 ## Architecture
 
 Single-binary Gin web app with MySQL backend. Module name: `ai-later-nav` (Go 1.24+).
 
-**Data flow**: Sites are stored in MySQL (`ai_later` database). Admin CRUD operations go through the service layer → repository layer → database. Data is no longer loaded from JSON files at runtime.
+**Data flow**: Sites stored in MySQL (`ai_later` database). Admin CRUD: service layer → repository layer → database. Migrations run automatically on startup.
 
-**Database**: MySQL 5.6+ with connection pooling. Schema managed via SQL migrations in `internal/database/migrations/`. Connection config in `config.yaml` under `mysql:` section.
-
-**Project structure** (follows Go standard layout):
+**Project structure**:
 ```
 main.go                        Entry point, routes, go:embed templates/static
-internal/                      Private packages (not importable externally)
+internal/
   config/config.go             Config struct, YAML loading, env overrides
   database/
     db.go                      MySQL connection management
-    migrate.go                 SQL migration runner
+    migrate.go                 SQL migration runner (runs on startup)
     migrations/                SQL schema files
     repository/
       site_repo.go             Site CRUD operations
@@ -49,65 +53,45 @@ internal/                      Private packages (not importable externally)
     page_handlers.go           SSR page rendering
     api_handlers.go            HTMX API endpoints
     admin_handlers.go          Admin CRUD handlers
-    helpers.go                 JWT token generation helper
   models/
-    site.go                    Site and SiteDisplay structs
-    user.go                    User and UserClaims structs
+    site.go, user.go           Data models
   services/
     site_service.go            Site business logic
     user_service.go            User auth and favorites
   middleware/
     globalmiddleware.go        JWT auth, global context injection
-  utils/
-    color_helper.go            Deterministic color+initials from site name
+  web/
+    templates.go               Template registration (BuildPageTemplates, BuildSharedTemplates)
 scripts/
   create_db/main.go            Create MySQL database
   migrate/main.go              JSON → MySQL migration tool
+  restart.sh                   Stop, rebuild, start
+  stop.sh                      Stop running process
 templates/                     Go HTML templates (go:embed)
   *.html                       Page templates
   partials/                    HTMX partial templates
   admin/                       Admin templates
 static/                        CSS, JS, images (go:embed)
-data/
-  ai.json                      Legacy data (used only for migration)
+test/
+  templ_test.go                Template rendering tests
 ```
 
 ## Key gotchas
 
-- **Template loading uses go:embed**: Templates are embedded in the binary via `//go:embed templates/*`. No need to manually register new templates, but they must be in the `templates/` directory.
-- **MySQL must be running**: The app requires a MySQL instance. Connection config in `config.yaml` under `mysql:` section.
-- **Run migrations before first use**: `go run scripts/create_db/main.go` creates the database, then `go run scripts/migrate/main.go` creates tables and imports data.
-- **Site lookup uses database ID**: Admin routes use numeric `:id` parameter (database primary key), not site name.
+- **Template registration is two-step**: Templates are embedded via `//go:embed templates/*` in `main.go`, but new templates must also be registered in `internal/web/templates.go` (`BuildPageTemplates` for public pages, `BuildSharedTemplates` for admin pages). Forgetting this causes runtime nil-pointer panics.
+- **Migrations run on startup**: `database.RunMigrations()` in `main.go` auto-applies SQL files from `internal/database/migrations/`. No separate migrate command needed for normal dev.
+- **MySQL must be running**: App requires MySQL. Connection config in `config.yaml` under `mysql:` section.
 - **config.yaml is gitignored**: Never commit it. `config.demo.yaml` is the committed template.
-- **Working directory matters**: Template and static paths are embedded via go:embed, but MySQL config is read from config.yaml in working directory.
+- **Site lookup uses database ID**: Admin routes use numeric `:id` parameter (database primary key), not site name.
+- **Working directory matters**: go:embed paths are relative to source, but `config.yaml` is read from the working directory.
+- **First-run setup**: If no admin user exists, the app redirects to `/setup` to create one.
 
 ## Database
 
-**MySQL 5.6+** with the following tables:
-- `sites` - Site information with soft delete support
-- `tags` - Tag names
-- `site_tags` - Many-to-many relationship between sites and tags
-- `users` - User accounts with bcrypt password hashing
-- `favorites` - User's favorite sites
-- `visits` - Visit tracking
-- `schema_migrations` - Migration version tracking
+MySQL 8.0+ with tables: `sites`, `tags`, `site_tags`, `users`, `favorites`, `visits`, `settings`, `schema_migrations`.
 
-**Env vars for MySQL config**:
-- `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`
+Env vars for MySQL config: `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`.
 
 ## Authentication
 
-JWT-based authentication with httpOnly cookies. Tokens expire after 7 days (configurable in `jwt.expire_days`).
-
-**Admin access**: Set user role to `admin` in the `users` table. First registered user should be manually promoted.
-
-## HTMX Integration
-
-The frontend uses HTMX for dynamic interactions:
-- `hx-get="/api/search"` - Live search with debounce
-- `hx-get="/api/sites/:id"` - Site detail modal
-- `hx-post="/api/auth/login"` - Login form submission
-- `hx-post="/api/auth/register"` - Register form submission
-- `hx-post="/api/favorites/:id"` - Toggle favorite (requires auth)
-
-HTMX partials are in `templates/partials/`.
+JWT with httpOnly cookies. Tokens expire after 7 days (configurable in `jwt.expire_days`). Admin access requires `role = 'admin'` in `users` table.
