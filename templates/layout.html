@@ -58,6 +58,7 @@ x-init="$watch('dark', v => localStorage.setItem('dark', v))">
         .htmx-indicator { display: none; }
         .htmx-request .htmx-indicator { display: inline-block; }
         .htmx-request.htmx-indicator { display: inline-block; }
+        [x-cloak] { display: none !important; }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
@@ -103,7 +104,7 @@ x-init="$watch('dark', v => localStorage.setItem('dark', v))">
                         <kbd class="hidden lg:inline-flex absolute top-1/2 -translate-y-1/2 right-3 items-center text-xs text-gray-400 bg-gray-200 dark:bg-gray-600 px-1.5 py-0.5 rounded pointer-events-none z-10">/</kbd>
                         
                         <!-- 搜索建议下拉框 -->
-                        <div x-show="showSuggestions" x-transition class="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden z-50">
+                        <div x-show="showSuggestions" x-cloak x-transition class="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden z-50">
                             <div id="search-suggestions"
                                  hx-get="/api/search/suggest"
                                  hx-trigger="input changed delay:200ms from:#searchInput"
@@ -151,7 +152,7 @@ x-init="$watch('dark', v => localStorage.setItem('dark', v))">
                             </svg>
                             <span class="hidden lg:inline">{{ .username }}</span>
                         </button>
-                        <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                        <div x-show="open" x-cloak x-transition class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                             <a href="/dashboard" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">个人中心</a>
                             {{ if eq .role "admin" }}<a href="/admin/" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">管理后台</a>{{ end }}
                             <hr class="my-1 border-gray-200 dark:border-gray-700">
@@ -175,7 +176,7 @@ x-init="$watch('dark', v => localStorage.setItem('dark', v))">
             </div>
             
             <!-- 移动端搜索框 -->
-            <div x-show="mobileSearch" x-transition class="sm:hidden mt-3">
+            <div x-show="mobileSearch" x-cloak x-transition class="sm:hidden mt-3">
                 <div class="relative">
                     <input 
                         type="search" 
@@ -195,7 +196,7 @@ x-init="$watch('dark', v => localStorage.setItem('dark', v))">
             </div>
             
             <!-- 移动端导航菜单 -->
-            <div x-show="mobileMenu" x-transition class="sm:hidden mt-3">
+            <div x-show="mobileMenu" x-cloak x-transition class="sm:hidden mt-3">
                 <nav class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 space-y-1">
                     <a href="/" class="block px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg">全部</a>
                     <a href="/search?category=AI对话" class="block px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg">对话</a>

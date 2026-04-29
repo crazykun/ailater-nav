@@ -29,7 +29,7 @@ if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
   kill "$pid" 2>/dev/null || true
   
   # Wait up to 5 seconds for graceful shutdown
-  local waited=0
+  waited=0
   while kill -0 "$pid" 2>/dev/null && [[ $waited -lt 5 ]]; do
     sleep 1
     ((waited++))

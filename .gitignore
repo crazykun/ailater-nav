@@ -30,3 +30,4 @@ ai-later-nav
 docs/*
 logs/*
 !logs/.gitkeep
+ai-later-nav.log

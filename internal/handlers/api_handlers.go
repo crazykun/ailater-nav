@@ -160,8 +160,12 @@ func (h *APIHandler) Login(c *gin.Context) {
 
 	user, err := h.userService.Login(username, password)
 	if err != nil {
+		msg := "用户名或密码错误"
+		if err == services.ErrUserBlocked {
+			msg = "账号已被禁用"
+		}
 		c.HTML(http.StatusOK, "partials/login-form.html", gin.H{
-			"error": "用户名或密码错误",
+			"error": msg,
 		})
 		return
 	}

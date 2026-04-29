@@ -17,6 +17,7 @@
                 </section>
 
                 <section class="admin-surface overflow-hidden">
+                    {{ template "admin-flash" . }}
                     <div class="overflow-x-auto">
                         <table class="admin-table min-w-full">
                             <thead>
@@ -25,7 +26,9 @@
                                     <th class="admin-table-head text-left">用户名</th>
                                     <th class="admin-table-head text-left">邮箱</th>
                                     <th class="admin-table-head text-left">角色</th>
+                                    <th class="admin-table-head text-left">状态</th>
                                     <th class="admin-table-head text-left">注册时间</th>
+                                    <th class="admin-table-head text-left" style="width:200px">操作</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -41,7 +44,40 @@
                                         <span class="admin-badge">普通用户</span>
                                         {{ end }}
                                     </td>
+                                    <td class="admin-table-cell">
+                                        {{ if eq .Status "blocked" }}
+                                        <span class="admin-badge admin-badge-danger">已禁用</span>
+                                        {{ else }}
+                                        <span class="admin-badge">正常</span>
+                                        {{ end }}
+                                    </td>
                                     <td class="admin-table-cell">{{ .CreatedAt.Format "2006-01-02 15:04" }}</td>
+                                    <td class="admin-table-cell align-top">
+                                        {{ if eq .ID $.currentUserID }}
+                                        <div class="space-y-1.5">
+                                            <button type="button" class="admin-btn-secondary admin-btn-sm" onclick="showPwdModal({{ .ID }}, '{{ .Username }}')">重置密码</button>
+                                            <span class="text-xs text-gray-400">当前账号不可执行此操作</span>
+                                        </div>
+                                        {{ else }}
+                                        <div class="space-y-1.5">
+                                            <form action="/admin/users/{{ .ID }}/role" method="POST">
+                                                <input type="hidden" name="role" value="{{ if eq .Role "admin" }}user{{ else }}admin{{ end }}">
+                                                <button type="submit" class="{{ if eq .Role "admin" }}admin-btn-secondary{{ else }}admin-btn-primary{{ end }} admin-btn-sm">
+                                                    {{ if eq .Role "admin" }}设为普通用户{{ else }}设为管理员{{ end }}
+                                                </button>
+                                            </form>
+
+                                            <button type="button" class="admin-btn-secondary admin-btn-sm" onclick="showPwdModal({{ .ID }}, '{{ .Username }}')">重置密码</button>
+
+                                            <form action="/admin/users/{{ .ID }}/status" method="POST">
+                                                <input type="hidden" name="status" value="{{ if eq .Status "blocked" }}active{{ else }}blocked{{ end }}">
+                                                <button type="submit" class="{{ if eq .Status "blocked" }}admin-btn-secondary{{ else }}admin-btn-danger{{ end }} admin-btn-sm">
+                                                    {{ if eq .Status "blocked" }}解除禁用{{ else }}禁用账号{{ end }}
+                                                </button>
+                                            </form>
+                                        </div>
+                                        {{ end }}
+                                    </td>
                                 </tr>
                                 {{ end }}
                             </tbody>
@@ -51,5 +87,34 @@
             </main>
         </div>
     </div>
+
+    <div id="pwdModal" class="admin-modal-overlay" style="display:none">
+        <div class="admin-modal">
+            <h3 class="admin-modal-title">重置密码</h3>
+            <p class="admin-modal-text">为 <span id="pwdModalName" class="font-semibold text-gray-900"></span> 设置新密码</p>
+            <form id="pwdModalForm" method="POST" style="margin-top:1rem">
+                <input type="password" name="new_password" class="admin-input" placeholder="输入新密码（至少 6 位）" minlength="6" required>
+                <div class="admin-modal-actions" style="margin-top:1rem">
+                    <button type="button" class="admin-btn-secondary" onclick="closePwdModal()">取消</button>
+                    <button type="submit" class="admin-btn-primary">确认重置</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    function showPwdModal(userId, username) {
+        document.getElementById('pwdModalName').textContent = username;
+        document.getElementById('pwdModalForm').action = '/admin/users/' + userId + '/password';
+        document.getElementById('pwdModalForm').querySelector('input[name="new_password"]').value = '';
+        document.getElementById('pwdModal').style.display = '';
+    }
+    function closePwdModal() {
+        document.getElementById('pwdModal').style.display = 'none';
+    }
+    document.getElementById('pwdModal').addEventListener('click', function(e) {
+        if (e.target === this) closePwdModal();
+    });
+    </script>
 </body>
 </html>

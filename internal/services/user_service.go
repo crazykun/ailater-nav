@@ -9,9 +9,14 @@ import (
 )
 
 var (
-	ErrUserNotFound    = errors.New("user not found")
-	ErrUsernameExists  = errors.New("username already exists")
-	ErrInvalidPassword = errors.New("invalid password")
+	ErrUserNotFound         = errors.New("user not found")
+	ErrUsernameExists       = errors.New("username already exists")
+	ErrInvalidPassword      = errors.New("invalid password")
+	ErrUserBlocked          = errors.New("user is blocked")
+	ErrCannotModifySelfRole = errors.New("cannot modify your own role")
+	ErrCannotBlockSelf      = errors.New("cannot block yourself")
+	ErrInvalidRole          = errors.New("invalid role")
+	ErrInvalidStatus        = errors.New("invalid status")
 )
 
 type UserService struct {
@@ -56,6 +61,10 @@ func (s *UserService) Login(username, password string) (*models.User, error) {
 	}
 	if user == nil {
 		return nil, ErrUserNotFound
+	}
+
+	if s.IsBlocked(user) {
+		return nil, ErrUserBlocked
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
@@ -164,4 +173,67 @@ func (s *UserService) GetRecentUsers(limit int) ([]*models.User, error) {
 		limit = 5
 	}
 	return s.userRepo.GetRecentUsers(limit)
+}
+
+// IsBlocked returns true if the user is blocked
+func (s *UserService) IsBlocked(user *models.User) bool {
+	return user.Status == "blocked"
+}
+
+// ResetPasswordByAdmin allows admin to reset another user's password without old password check
+func (s *UserService) ResetPasswordByAdmin(userID int64, newPassword string) error {
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return ErrUserNotFound
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	return s.userRepo.UpdatePassword(userID, string(hash))
+}
+
+// SetUserRole allows admin to set another user's role
+func (s *UserService) SetUserRole(adminID, targetUserID int64, newRole string) error {
+	if adminID == targetUserID {
+		return ErrCannotModifySelfRole
+	}
+	if newRole != "admin" && newRole != "user" {
+		return ErrInvalidRole
+	}
+
+	user, err := s.userRepo.GetByID(targetUserID)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return ErrUserNotFound
+	}
+
+	return s.userRepo.UpdateRole(targetUserID, newRole)
+}
+
+// SetUserStatus allows admin to set another user's status
+func (s *UserService) SetUserStatus(adminID, targetUserID int64, newStatus string) error {
+	if adminID == targetUserID && newStatus == "blocked" {
+		return ErrCannotBlockSelf
+	}
+	if newStatus != "active" && newStatus != "blocked" {
+		return ErrInvalidStatus
+	}
+
+	user, err := s.userRepo.GetByID(targetUserID)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return ErrUserNotFound
+	}
+
+	return s.userRepo.UpdateStatus(targetUserID, newStatus)
 }

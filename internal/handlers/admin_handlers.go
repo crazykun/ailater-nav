@@ -269,6 +269,63 @@ func (h *AdminHandler) AdminDeleteSite(c *gin.Context) {
 }
 
 func (h *AdminHandler) AdminUsers(c *gin.Context) {
+	h.renderAdminUsers(c, http.StatusOK, "")
+}
+
+func (h *AdminHandler) AdminUpdateUserRole(c *gin.Context) {
+	targetUserID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		h.renderAdminUsers(c, http.StatusOK, "无效的用户 ID")
+		return
+	}
+
+	role := strings.TrimSpace(c.PostForm("role"))
+	if err := h.userService.SetUserRole(c.GetInt64("user_id"), targetUserID, role); err != nil {
+		h.renderAdminUsers(c, http.StatusOK, "操作失败: "+err.Error())
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/admin/users")
+}
+
+func (h *AdminHandler) AdminResetUserPassword(c *gin.Context) {
+	targetUserID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		h.renderAdminUsers(c, http.StatusOK, "无效的用户 ID")
+		return
+	}
+
+	newPassword := c.PostForm("new_password")
+	if len(newPassword) < 6 {
+		h.renderAdminUsers(c, http.StatusOK, "新密码至少 6 位")
+		return
+	}
+
+	if err := h.userService.ResetPasswordByAdmin(targetUserID, newPassword); err != nil {
+		h.renderAdminUsers(c, http.StatusOK, "操作失败: "+err.Error())
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/admin/users")
+}
+
+func (h *AdminHandler) AdminUpdateUserStatus(c *gin.Context) {
+	targetUserID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		h.renderAdminUsers(c, http.StatusOK, "无效的用户 ID")
+		return
+	}
+
+	status := strings.TrimSpace(c.PostForm("status"))
+	if err := h.userService.SetUserStatus(c.GetInt64("user_id"), targetUserID, status); err != nil {
+		h.renderAdminUsers(c, http.StatusOK, "操作失败: "+err.Error())
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/admin/users")
+}
+
+func (h *AdminHandler) renderAdminUsers(c *gin.Context, statusCode int, errorMsg string) {
 	users, err := h.userService.GetAllUsers()
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "error.html", gin.H{
@@ -279,7 +336,11 @@ func (h *AdminHandler) AdminUsers(c *gin.Context) {
 
 	common := getCommonAdminData(c, "users", "用户管理", "查看注册用户和角色信息。")
 	common["users"] = users
-	c.HTML(http.StatusOK, "admin-users.html", common)
+	common["currentUserID"] = c.GetInt64("user_id")
+	if errorMsg != "" {
+		common["error"] = errorMsg
+	}
+	c.HTML(statusCode, "admin-users.html", common)
 }
 
 func (h *AdminHandler) AdminSettingsForm(c *gin.Context) {

@@ -50,6 +50,8 @@ func ValidateToken(tokenString string) (*models.UserClaims, error) {
 }
 
 func AuthMiddleware() gin.HandlerFunc {
+	userService := services.NewUserService()
+
 	return func(c *gin.Context) {
 		token, err := c.Cookie("token")
 		if err != nil {
@@ -66,14 +68,28 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("user_id", claims.UserID)
-		c.Set("username", claims.Username)
-		c.Set("role", claims.Role)
+		user, err := userService.GetByID(claims.UserID)
+		if err != nil {
+			c.AbortWithStatus(http.StatusServiceUnavailable)
+			return
+		}
+		if user == nil || userService.IsBlocked(user) {
+			c.SetCookie("token", "", -1, "/", "", false, true)
+			c.Redirect(http.StatusFound, "/login")
+			c.Abort()
+			return
+		}
+
+		c.Set("user_id", user.ID)
+		c.Set("username", user.Username)
+		c.Set("role", user.Role)
 		c.Next()
 	}
 }
 
 func OptionalAuth() gin.HandlerFunc {
+	userService := services.NewUserService()
+
 	return func(c *gin.Context) {
 		token, err := c.Cookie("token")
 		if err != nil {
@@ -87,9 +103,20 @@ func OptionalAuth() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("user_id", claims.UserID)
-		c.Set("username", claims.Username)
-		c.Set("role", claims.Role)
+		user, err := userService.GetByID(claims.UserID)
+		if err != nil {
+			c.Next()
+			return
+		}
+		if user == nil || userService.IsBlocked(user) {
+			c.SetCookie("token", "", -1, "/", "", false, true)
+			c.Next()
+			return
+		}
+
+		c.Set("user_id", user.ID)
+		c.Set("username", user.Username)
+		c.Set("role", user.Role)
 		c.Next()
 	}
 }
@@ -137,9 +164,9 @@ func AddGlobalContext() gin.HandlerFunc {
 
 func SetupRequired() gin.HandlerFunc {
 	var (
-		userRepo     *repository.UserRepository
-		repoOnce     sync.Once
-		setupDone    atomic.Bool
+		userRepo  *repository.UserRepository
+		repoOnce  sync.Once
+		setupDone atomic.Bool
 	)
 
 	return func(c *gin.Context) {
