@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <title>系统设置 - {{ .SiteName }}</title>
+    {{ template "admin-head" . }}
+</head>
+<body class="admin-body">
+    <div class="admin-shell">
+        {{ template "admin-sidebar" . }}
+        <div class="admin-main">
+            {{ template "admin-topbar" . }}
+            <main class="admin-content">
+                <section class="admin-surface admin-form-surface max-w-3xl">
+                    {{ template "admin-flash" . }}
+                    <form action="/admin/settings" method="POST" class="admin-form-grid">
+                        <div>
+                            <label for="site_name" class="admin-label">站点名称</label>
+                            <input id="site_name" name="site_name" type="text" class="admin-input" value="{{ index .settings "site_name" }}">
+                        </div>
+                        <div>
+                            <label for="copyright" class="admin-label">版权信息</label>
+                            <input id="copyright" name="copyright" type="text" class="admin-input" value="{{ index .settings "copyright" }}">
+                            <p class="text-xs text-gray-500 mt-1">显示在页面底部</p>
+                        </div>
+                        <div class="admin-form-actions">
+                            <button type="submit" class="admin-btn-primary">保存设置</button>
+                        </div>
+                    </form>
+                </section>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

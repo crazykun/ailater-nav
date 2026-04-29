@@ -1,0 +1,36 @@
+{{ define "admin-head" }}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="/static/css/tailwind-3.4.17.css"></script>
+<link rel="stylesheet" href="/static/css/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+{{ end }}
+
+{{ define "admin-sidebar" }}
+<aside class="admin-sidebar">
+  <div class="admin-sidebar-brand">{{ .SiteName }} 后台管理</div>
+  <nav class="admin-sidebar-nav">
+    <a href="/admin/" class="admin-nav-item {{ if eq .adminSection "dashboard" }}admin-nav-item-active{{ end }}">仪表盘</a>
+    <a href="/admin/sites" class="admin-nav-item {{ if eq .adminSection "sites" }}admin-nav-item-active{{ end }}">站点管理</a>
+    <a href="/admin/stats" class="admin-nav-item {{ if eq .adminSection "stats" }}admin-nav-item-active{{ end }}">访问统计</a>
+    <a href="/admin/users" class="admin-nav-item {{ if eq .adminSection "users" }}admin-nav-item-active{{ end }}">用户管理</a>
+    <a href="/admin/settings" class="admin-nav-item {{ if eq .adminSection "settings" }}admin-nav-item-active{{ end }}">系统设置</a>
+  </nav>
+</aside>
+{{ end }}
+
+{{ define "admin-topbar" }}
+<header class="admin-topbar">
+  <div>
+    <p class="admin-kicker">Admin Panel</p>
+    <h1 class="admin-page-title">{{ .pageTitle }}</h1>
+    {{ if .pageDescription }}<p class="admin-page-description">{{ .pageDescription }}</p>{{ end }}
+  </div>
+  <div style="display: flex; align-items: center; gap: 1rem;">
+    <span class="admin-topbar-user">{{ .username }}</span>
+    <a href="/" class="admin-btn-secondary" style="font-size: 0.8125rem; padding: 0.5rem 1rem;">返回前台</a>
+  </div>
+</header>
+{{ end }}

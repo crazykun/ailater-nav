@@ -1,104 +1,56 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>编辑站点 - AI导航</title>
-    <script src="/static/css/tailwind-3.4.17.css"></script>
+    <title>编辑站点 - {{ .SiteName }}</title>
+    {{ template "admin-head" . }}
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <div class="flex h-screen overflow-hidden">
-        <!-- Sidebar -->
-        <div class="bg-gray-800 text-white w-64 flex-shrink-0">
-            <div class="p-4 border-b border-gray-700">
-                <h1 class="text-xl font-bold">后台管理</h1>
-            </div>
-            <nav class="mt-5">
-                <a href="/admin" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white">
-                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                    </svg>
-                    仪表盘
-                </a>
-                <a href="/admin/sites" class="flex items-center px-4 py-3 bg-gray-700 text-white">
-                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                    </svg>
-                    站点管理
-                </a>
-                <a href="/admin/logout" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white mt-auto">
-                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                    </svg>
-                    退出登录
-                </a>
-            </nav>
-        </div>
-        
-        <!-- Main Content -->
-        <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Header -->
-            <header class="bg-white shadow-sm z-10">
-                <div class="flex items-center justify-between px-6 py-4">
-                    <h2 class="text-lg font-medium text-gray-800">编辑站点</h2>
-                    <a href="/admin/sites" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors">
-                        返回列表
-                    </a>
-                </div>
-            </header>
-            
-            <!-- Content -->
-            <main class="flex-1 overflow-y-auto p-6 bg-gray-100">
-                <div class="bg-white rounded-lg shadow p-6 max-w-2xl mx-auto">
-                    {{ if .error }}
-                    <div class="bg-red-100 text-red-700 p-3 rounded mb-4">
-                        {{ .error }}
-                    </div>
-                    {{ end }}
-                    <form action="/admin/sites/edit/{{ .site.Name }}" method="POST" class="space-y-6">
+<body class="admin-body">
+    <div class="admin-shell">
+        {{ template "admin-sidebar" . }}
+        <div class="admin-main">
+            {{ template "admin-topbar" . }}
+            <main class="admin-content">
+                <section class="admin-surface admin-form-surface max-w-3xl">
+                    {{ template "admin-flash" . }}
+                    <form action="/admin/sites/edit/{{ .site.ID }}" method="POST" class="admin-form-grid">
                         <div>
-                            <label for="name" class="block text-sm font-medium text-gray-700 mb-1">站点名称</label>
-                            <input type="text" id="name" name="Name" value="{{ .site.Name }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <label for="name" class="admin-label">站点名称</label>
+                            <input type="text" id="name" name="Name" value="{{ .site.Name }}" class="admin-input" required>
                         </div>
                         <div>
-                            <label for="url" class="block text-sm font-medium text-gray-700 mb-1">站点URL</label>
-                            <input type="url" id="url" name="URL" value="{{ .site.URL }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <label for="url" class="admin-label">站点URL</label>
+                            <input type="url" id="url" name="URL" value="{{ .site.URL }}" class="admin-input" required>
                         </div>
                         <div>
-                            <label for="description" class="block text-sm font-medium text-gray-700 mb-1">站点描述</label>
-                            <textarea id="description" name="Description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>{{ .site.Description }}</textarea>
+                            <label for="description" class="admin-label">站点描述</label>
+                            <textarea id="description" name="Description" rows="3" class="admin-textarea" required>{{ .site.Description }}</textarea>
                         </div>
                         <div>
-                            <label for="logo" class="block text-sm font-medium text-gray-700 mb-1">Logo路径</label>
-                            <input type="text" id="logo" name="Logo" value="{{ .site.Logo }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="/static/img/...">
+                            <label for="logo" class="admin-label">Logo路径</label>
+                            <input type="text" id="logo" name="Logo" value="{{ .site.Logo }}" class="admin-input" placeholder="/static/img/...">
                         </div>
                         <div>
-                            <label for="category" class="block text-sm font-medium text-gray-700 mb-1">主分类</label>
-                            <input type="text" id="category" name="Category" value="{{ .site.Category }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="如：AI对话">
+                            <label for="category" class="admin-label">主分类</label>
+                            <input type="text" id="category" name="Category" value="{{ .site.Category }}" class="admin-input" placeholder="如：AI对话">
                         </div>
                         <div>
-                            <label for="tags" class="block text-sm font-medium text-gray-700 mb-1">标签（用逗号分隔）</label>
-                            <input type="text" id="tags" name="Tags" value="{{ .tagsString }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="AI对话, 语言模型, 智能助手">
+                            <label for="tags" class="admin-label">标签（用逗号分隔）</label>
+                            <input type="text" id="tags" name="Tags" value="{{ .tagsString }}" class="admin-input" placeholder="AI对话, 语言模型, 智能助手">
                         </div>
                         <div>
-                            <label for="rating" class="block text-sm font-medium text-gray-700 mb-1">评分（1-5）</label>
-                            <input type="number" id="rating" name="Rating" min="0" max="5" step="0.1" value="{{ .site.Rating }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.0">
+                            <label for="rating" class="admin-label">评分（1-5）</label>
+                            <input type="number" id="rating" name="Rating" min="0" max="5" step="0.1" value="{{ .site.Rating }}" class="admin-input" placeholder="0.0">
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">推荐</label>
-                            <input type="checkbox" id="featured" name="Featured" {{ if .site.Featured }}checked{{ end }} class="mt-1">
-                            <label for="featured" class="ml-2 text-sm text-gray-600">设为推荐站点</label>
+                        <div class="admin-checkbox-row">
+                            <input type="checkbox" id="featured" name="Featured" {{ if .site.Featured }}checked{{ end }} class="admin-checkbox">
+                            <label for="featured" class="admin-checkbox-label">设为推荐站点</label>
                         </div>
-                        <div class="flex justify-end space-x-3">
-                            <a href="/admin/sites" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                                取消
-                            </a>
-                            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
-                                保存
-                            </button>
+                        <div class="admin-form-actions">
+                            <a href="/admin/sites" class="admin-btn-secondary">取消</a>
+                            <button type="submit" class="admin-btn-primary">保存</button>
                         </div>
                     </form>
-                </div>
+                </section>
             </main>
         </div>
     </div>

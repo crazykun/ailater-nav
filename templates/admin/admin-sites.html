@@ -1,119 +1,120 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>站点管理 - AI导航</title>
-    <script src="/static/css/tailwind-3.4.17.css"></script>
+    <title>站点管理 - {{ .SiteName }}</title>
+    {{ template "admin-head" . }}
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <div class="flex h-screen overflow-hidden">
-        <!-- Sidebar -->
-        <div class="bg-gray-800 text-white w-64 flex-shrink-0">
-            <div class="p-4 border-b border-gray-700">
-                <h1 class="text-xl font-bold">后台管理</h1>
-            </div>
-            <nav class="mt-5">
-                <a href="/admin" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white">
-                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                    </svg>
-                    仪表盘
-                </a>
-                <a href="/admin/sites" class="flex items-center px-4 py-3 bg-gray-700 text-white">
-                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                    </svg>
-                    站点管理
-                </a>
-                <a href="/admin/logout" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white mt-auto">
-                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                    </svg>
-                    退出登录
-                </a>
-            </nav>
-        </div>
-        
-        <!-- Main Content -->
-        <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Header -->
-            <header class="bg-white shadow-sm z-10">
-                <div class="flex items-center justify-between px-6 py-4">
-                    <h2 class="text-lg font-medium text-gray-800">站点管理</h2>
-                    <a href="/admin/sites/add" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors">
-                        添加站点
-                    </a>
-                </div>
-            </header>
-            
-            <!-- Content -->
-            <main class="flex-1 overflow-y-auto p-6 bg-gray-100">
-                <div class="bg-white rounded-lg shadow overflow-hidden">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    名称
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    URL
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    标签
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    操作
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            {{ range .sites }}
-                            <tr data-name="{{ .Name }}">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 h-10 w-10">
-                                            {{ if .Logo }}
-                                            <img class="h-10 w-10 rounded-full" src="{{ .Logo }}" alt="{{ .Name }}">
-                                            {{ else }}
-                                            <div class="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-sm" style="background-color: {{ .Color }}">
-                                                {{ .Initials }}
+<body class="admin-body">
+    <div class="admin-shell">
+        {{ template "admin-sidebar" . }}
+        <div class="admin-main">
+            {{ template "admin-topbar" . }}
+            <main class="admin-content">
+                <section class="admin-toolbar-row">
+                    <div class="admin-toolbar-meta">
+                        <span class="admin-chip">{{ len .sites }} 个站点</span>
+                    </div>
+                    <a href="/admin/sites/add" class="admin-btn-primary">添加站点</a>
+                </section>
+
+                <section class="admin-surface overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="admin-table min-w-full">
+                            <thead>
+                                <tr>
+                                    <th class="admin-table-head text-left">名称</th>
+                                    <th class="admin-table-head text-left">URL</th>
+                                    <th class="admin-table-head text-left">标签</th>
+                                    <th class="admin-table-head text-right">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ range .sites }}
+                                <tr data-name="{{ .Name }}">
+                                    <td class="admin-table-cell">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10">
+                                                {{ if .Logo }}
+                                                <img class="h-10 w-10 rounded-full" src="{{ .Logo }}" alt="{{ .Name }}">
+                                                {{ else }}
+                                                <div class="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-sm" style="background-color: {{ .Color }}">
+                                                    {{ .Initials }}
+                                                </div>
+                                                {{ end }}
                                             </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900">{{ .Name }}</div>
+                                                <div class="text-sm text-gray-500">{{ .Description }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="admin-table-cell">
+                                        <div class="text-sm text-gray-900">{{ .URL }}</div>
+                                    </td>
+                                    <td class="admin-table-cell">
+                                        <div class="flex flex-wrap gap-2">
+                                            {{ range .DisplayTags }}
+                                            <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ .Class }}">{{ .Name }}</span>
                                             {{ end }}
                                         </div>
-                                        <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900">{{ .Name }}</div>
-                                            <div class="text-sm text-gray-500">{{ .Description }}</div>
+                                    </td>
+                                    <td class="admin-table-cell text-right">
+                                        <div class="inline-flex items-center gap-2">
+                                            <a href="/admin/sites/edit/{{ .ID }}" class="admin-btn-icon admin-btn-icon-edit" title="编辑">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                </svg>
+                                            </a>
+                                            <button type="button" class="admin-btn-icon admin-btn-icon-danger" title="删除"
+                                                onclick="showDeleteModal('{{ .Name }}', '/admin/sites/delete/{{ .ID }}')">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
                                         </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ .URL }}</div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex flex-wrap gap-2">
-                                        {{ range .Tags }}
-                                        <span class="px-2 py-1 text-xs font-medium bg-gray-100 rounded-full text-gray-800">
-                                            {{ . }}
-                                        </span>
-                                        {{ end }}
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <a href="/admin/sites/edit/{{ .Name }}" class="text-blue-600 hover:text-blue-900 mr-3">
-                                        编辑
-                                    </a>
-                                    <a href="/admin/sites/delete/{{ .Name }}" class="text-red-600 hover:text-red-900" onclick="return confirm('确定要删除这个站点吗？')">
-                                        删除
-                                    </a>
-                                </td>
-                            </tr>
-                            {{ end }}
-                        </tbody>
-                    </table>
-                </div>
+                                    </td>
+                                </tr>
+                                {{ end }}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
             </main>
         </div>
     </div>
+
+    <!-- 删除确认模态框 -->
+    <div id="deleteModal" class="admin-modal-overlay" style="display:none">
+        <div class="admin-modal">
+            <div class="admin-modal-icon">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <h3 class="admin-modal-title">确认删除</h3>
+            <p class="admin-modal-text">确定要删除站点 <span id="deleteModalName" class="font-semibold text-gray-900"></span> 吗？此操作不可撤销。</p>
+            <div class="admin-modal-actions">
+                <button type="button" class="admin-btn-secondary" onclick="closeDeleteModal()">取消</button>
+                <a id="deleteModalConfirm" href="#" class="admin-btn-danger">删除</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function showDeleteModal(name, url) {
+        document.getElementById('deleteModalName').textContent = name;
+        document.getElementById('deleteModalConfirm').href = url;
+        document.getElementById('deleteModal').style.display = '';
+    }
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDeleteModal();
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeDeleteModal();
+    });
+    </script>
 </body>
 </html>

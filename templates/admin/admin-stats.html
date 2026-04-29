@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <title>访问统计 - {{ .SiteName }}</title>
+    {{ template "admin-head" . }}
+</head>
+<body class="admin-body">
+    <div class="admin-shell">
+        {{ template "admin-sidebar" . }}
+        <div class="admin-main">
+            {{ template "admin-topbar" . }}
+            <main class="admin-content">
+                <section class="admin-surface overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="admin-table min-w-full">
+                            <thead>
+                                <tr>
+                                    <th class="admin-table-head text-left">站点</th>
+                                    <th class="admin-table-head text-center">总 PV</th>
+                                    <th class="admin-table-head text-center">总 UV</th>
+                                    <th class="admin-table-head text-center">今日 PV</th>
+                                    <th class="admin-table-head text-center">今日 UV</th>
+                                    <th class="admin-table-head text-center">本周 PV</th>
+                                    <th class="admin-table-head text-center">本周 UV</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ range .sites }}
+                                <tr>
+                                    <td class="admin-table-cell">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10">
+                                                {{ if .Logo }}
+                                                <img class="h-10 w-10 rounded-full" src="{{ .Logo }}" alt="{{ .Name }}">
+                                                {{ else }}
+                                                <div class="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-sm" style="background-color: {{ .Color }}">
+                                                    {{ .Initials }}
+                                                </div>
+                                                {{ end }}
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900">{{ .Name }}</div>
+                                                <div class="text-sm text-gray-500">{{ .Category }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="admin-table-cell text-center">
+                                        <div class="admin-metric-number text-blue-600">{{ if .Stats }}{{ .Stats.PV }}{{ else }}0{{ end }}</div>
+                                    </td>
+                                    <td class="admin-table-cell text-center">
+                                        <div class="admin-metric-number text-purple-600">{{ if .Stats }}{{ .Stats.UV }}{{ else }}0{{ end }}</div>
+                                    </td>
+                                    <td class="admin-table-cell text-center">
+                                        <div class="admin-metric-number text-green-600">{{ if .Stats }}{{ .Stats.TodayPV }}{{ else }}0{{ end }}</div>
+                                    </td>
+                                    <td class="admin-table-cell text-center">
+                                        <div class="admin-metric-number text-emerald-600">{{ if .Stats }}{{ .Stats.TodayUV }}{{ else }}0{{ end }}</div>
+                                    </td>
+                                    <td class="admin-table-cell text-center">
+                                        <div class="admin-metric-number text-orange-600">{{ if .Stats }}{{ .Stats.WeekPV }}{{ else }}0{{ end }}</div>
+                                    </td>
+                                    <td class="admin-table-cell text-center">
+                                        <div class="admin-metric-number text-amber-600">{{ if .Stats }}{{ .Stats.WeekUV }}{{ else }}0{{ end }}</div>
+                                    </td>
+                                </tr>
+                                {{ end }}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

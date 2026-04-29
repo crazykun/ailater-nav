@@ -1,0 +1,71 @@
+-- 站点表
+CREATE TABLE IF NOT EXISTS sites (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    url VARCHAR(512) NOT NULL,
+    description TEXT,
+    logo VARCHAR(512),
+    category VARCHAR(100) DEFAULT '',
+    rating DOUBLE DEFAULT 0,
+    visits BIGINT DEFAULT 0,
+    featured TINYINT(1) DEFAULT 0,
+    deleted TINYINT(1) DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_name (name),
+    KEY idx_category (category),
+    KEY idx_featured (featured),
+    KEY idx_deleted (deleted)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 标签表
+CREATE TABLE IF NOT EXISTS tags (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    UNIQUE KEY uk_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 站点-标签关联表
+CREATE TABLE IF NOT EXISTS site_tags (
+    site_id BIGINT UNSIGNED NOT NULL,
+    tag_id BIGINT UNSIGNED NOT NULL,
+    PRIMARY KEY (site_id, tag_id),
+    KEY idx_tag_id (tag_id),
+    FOREIGN KEY (site_id) REFERENCES sites(id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 用户表
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL,
+    email VARCHAR(255),
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) DEFAULT 'user',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_username (username),
+    UNIQUE KEY uk_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 收藏表
+CREATE TABLE IF NOT EXISTS favorites (
+    user_id BIGINT UNSIGNED NOT NULL,
+    site_id BIGINT UNSIGNED NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, site_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (site_id) REFERENCES sites(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 访问记录表
+CREATE TABLE IF NOT EXISTS visits (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    site_id BIGINT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED,
+    ip VARCHAR(45),
+    visited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_site_id (site_id),
+    KEY idx_visited_at (visited_at),
+    FOREIGN KEY (site_id) REFERENCES sites(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

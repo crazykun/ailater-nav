@@ -1,0 +1,66 @@
+{{ template "layout.html" . }}
+
+{{ define "content" }}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <!-- Dashboard Header -->
+    <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <h1 class="text-lg font-bold text-gray-900 dark:text-white">我的收藏</h1>
+                <span class="text-sm text-gray-400">{{ if .favoriteSites }}{{ len .favoriteSites }} 个工具{{ end }}</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="/" class="text-sm text-gray-500 dark:text-gray-400 hover:text-blue-500 transition-colors">返回首页</a>
+                <!-- 用户下拉菜单 -->
+                <div x-data="{ open: false }" @click.outside="open = false" class="relative">
+                    <button @click="open = !open" class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer">
+                        <div class="w-7 h-7 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
+                            {{ .username | printf "%.1s" | upper }}
+                        </div>
+                        <span class="hidden sm:inline">{{ .username }}</span>
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div x-show="open" x-cloak x-transition
+                         class="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                        <button @click="open = false; $refs.pwdDialog.showModal()"
+                                class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+                            修改密码
+                        </button>
+                        <hr class="my-1 border-gray-100 dark:border-gray-700">
+                        <button hx-post="/api/auth/logout"
+                                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+                            退出登录
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 收藏列表 -->
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+        <div id="favorites-container">
+            {{ template "partials/favorites-list.html" . }}
+        </div>
+    </div>
+</div>
+
+<!-- 修改密码弹窗 -->
+<dialog x-ref="pwdDialog" class="rounded-xl shadow-2xl p-0 w-full max-w-md backdrop:bg-black/50 bg-white dark:bg-gray-800">
+    <div class="p-5">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-medium text-gray-900 dark:text-white">修改密码</h3>
+            <button onclick="this.closest('dialog').close()" class="text-gray-400 hover:text-gray-600 cursor-pointer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div id="password-form">
+            {{ template "partials/password-form.html" . }}
+        </div>
+    </div>
+</dialog>
+{{ end }}

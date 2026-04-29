@@ -1,7 +1,20 @@
-port : 8080
-copyright : "京ICP备8888888号"
-admin:
-  username: admin
-  password: admin123
-session:
-  secret: your-secret-key-here
+port: 8080
+
+mysql:
+  host: localhost
+  port: 3306
+  username: root
+  password: "123456"
+  database: ai_later
+
+jwt:
+  secret: your-jwt-secret-change-me
+  expire_days: 7
+
+log:
+  access_log:
+    enabled: true
+    file_path: logs/access.log
+    max_size: 100
+    max_backups: 7
+    max_age: 7
