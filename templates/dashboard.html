@@ -12,7 +12,7 @@
             <div class="flex items-center gap-3">
                 <a href="/" class="text-sm text-gray-500 dark:text-gray-400 hover:text-blue-500 transition-colors">返回首页</a>
                 <!-- 用户下拉菜单 -->
-                <div x-data="{ open: false }" class="relative">
+                <div x-data="{ open: false }" @click.outside="open = false" class="relative">
                     <button @click="open = !open" class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer">
                         <div class="w-7 h-7 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
                             {{ .username | printf "%.1s" | upper }}
@@ -22,7 +22,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                     </button>
-                    <div x-show="open" @click.away="open = false" x-transition
+                    <div x-show="open" x-transition
                          class="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                         <button @click="open = false; $refs.pwdDialog.showModal()"
                                 class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">

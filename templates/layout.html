@@ -144,14 +144,14 @@ x-init="$watch('dark', v => localStorage.setItem('dark', v))">
                     
                     <!-- 用户菜单 -->
                     {{ if .isLoggedIn }}
-                    <div x-data="{ open: false }" class="relative">
+                    <div x-data="{ open: false }" @click.outside="open = false" class="relative">
                         <button @click="open = !open" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
                             <span class="hidden lg:inline">{{ .username }}</span>
                         </button>
-                        <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                        <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                             <a href="/dashboard" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">个人中心</a>
                             {{ if eq .role "admin" }}<a href="/admin/" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">管理后台</a>{{ end }}
                             <hr class="my-1 border-gray-200 dark:border-gray-700">
