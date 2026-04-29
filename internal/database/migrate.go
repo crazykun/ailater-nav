@@ -12,7 +12,7 @@ import (
 
 func RunMigrations(db *sql.DB, migrationsDir string) error {
 	if _, err := db.Exec(`CREATE TABLE IF NOT EXISTS schema_migrations (
-		version VARCHAR(255) PRIMARY KEY,
+		version VARCHAR(150) PRIMARY KEY,
 		applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`); err != nil {
 		return fmt.Errorf("failed to create migrations table: %w", err)
