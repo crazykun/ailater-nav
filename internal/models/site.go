@@ -17,21 +17,28 @@ type Site struct {
 	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
 }
 
+type DisplayTag struct {
+	Name  string `json:"name"`
+	Class string `json:"class"`
+}
+
 type SiteWithTags struct {
 	Site
-	Tags     []string `json:"tags"`
-	Color    string   `json:"color"`
-	Initials string   `json:"initials"`
-	IsFav    bool     `json:"is_fav"`
+	Tags        []string     `json:"tags"`
+	DisplayTags []DisplayTag `json:"display_tags"`
+	Color       string       `json:"color"`
+	Initials    string       `json:"initials"`
+	IsFav       bool         `json:"is_fav"`
 }
 
 type SiteDisplay struct {
 	Site
-	Tags     []string `json:"tags"`
-	Color    string   `json:"color"`
-	Initials string   `json:"initials"`
-	IsFav    bool     `json:"is_fav"`
-	TodayUV  int64    `json:"today_uv"`
+	Tags        []string     `json:"tags"`
+	DisplayTags []DisplayTag `json:"display_tags"`
+	Color       string       `json:"color"`
+	Initials    string       `json:"initials"`
+	IsFav       bool         `json:"is_fav"`
+	TodayUV     int64        `json:"today_uv"`
 }
 
 type SiteStats struct {

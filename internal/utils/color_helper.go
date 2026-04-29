@@ -3,6 +3,7 @@ package utils
 import (
 	"crypto/md5"
 	"fmt"
+	"strings"
 )
 
 // GenerateColorFromName 根据网站名称生成一致的颜色代码
@@ -114,4 +115,26 @@ func GetInitialsFromName(name string) string {
 	}
 
 	return initial
+}
+
+var tagPalette = []string{
+	"bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800",
+	"bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-900/20 dark:text-sky-300 dark:border-sky-800",
+	"bg-violet-50 text-violet-700 border border-violet-200 dark:bg-violet-900/20 dark:text-violet-300 dark:border-violet-800",
+	"bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800",
+	"bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-900/20 dark:text-rose-300 dark:border-rose-800",
+	"bg-teal-50 text-teal-700 border border-teal-200 dark:bg-teal-900/20 dark:text-teal-300 dark:border-teal-800",
+	"bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-300 dark:border-indigo-800",
+	"bg-orange-50 text-orange-700 border border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800",
+}
+
+func GetTagColorClass(tag string) string {
+	normalized := strings.TrimSpace(tag)
+	if normalized == "" {
+		return tagPalette[0]
+	}
+
+	hash := md5.Sum([]byte(normalized))
+	index := int(hash[0]) % len(tagPalette)
+	return tagPalette[index]
 }

@@ -53,8 +53,8 @@
                                     </td>
                                     <td class="admin-table-cell">
                                         <div class="flex flex-wrap gap-2">
-                                            {{ range .Tags }}
-                                            <span class="admin-badge">{{ . }}</span>
+                                            {{ range .DisplayTags }}
+                                            <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ .Class }}">{{ .Name }}</span>
                                             {{ end }}
                                         </div>
                                     </td>

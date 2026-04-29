@@ -4,10 +4,37 @@ import (
 	"ai-later-nav/internal/database/repository"
 	"ai-later-nav/internal/models"
 	"ai-later-nav/internal/utils"
+	"strings"
 )
 
 type SiteService struct {
 	siteRepo *repository.SiteRepository
+}
+
+func buildDisplayTags(tags []string) []models.DisplayTag {
+	displayTags := make([]models.DisplayTag, 0, len(tags))
+	for _, tag := range tags {
+		normalized := strings.TrimSpace(tag)
+		if normalized == "" {
+			continue
+		}
+		displayTags = append(displayTags, models.DisplayTag{
+			Name:  normalized,
+			Class: utils.GetTagColorClass(normalized),
+		})
+	}
+	return displayTags
+}
+
+func buildSiteDisplay(site models.SiteWithTags, todayUV int64) models.SiteDisplay {
+	return models.SiteDisplay{
+		Site:        site.Site,
+		Tags:        site.Tags,
+		DisplayTags: buildDisplayTags(site.Tags),
+		Color:       utils.GenerateColorFromName(site.Name),
+		Initials:    utils.GetInitialsFromName(site.Name),
+		TodayUV:     todayUV,
+	}
 }
 
 func NewSiteService() *SiteService {
@@ -33,13 +60,7 @@ func (s *SiteService) GetAll() ([]models.SiteDisplay, error) {
 
 	var result []models.SiteDisplay
 	for _, swt := range sites {
-		result = append(result, models.SiteDisplay{
-			Site:     swt.Site,
-			Tags:     swt.Tags,
-			Color:    utils.GenerateColorFromName(swt.Name),
-			Initials: utils.GetInitialsFromName(swt.Name),
-			TodayUV:  todayUVMap[swt.ID],
-		})
+		result = append(result, buildSiteDisplay(swt, todayUVMap[swt.ID]))
 	}
 	return result, nil
 }
@@ -59,10 +80,11 @@ func (s *SiteService) GetByID(id int64) (*models.SiteWithTags, error) {
 	}
 
 	return &models.SiteWithTags{
-		Site:     *site,
-		Tags:     tags,
-		Color:    utils.GenerateColorFromName(site.Name),
-		Initials: utils.GetInitialsFromName(site.Name),
+		Site:        *site,
+		Tags:        tags,
+		DisplayTags: buildDisplayTags(tags),
+		Color:       utils.GenerateColorFromName(site.Name),
+		Initials:    utils.GetInitialsFromName(site.Name),
 	}, nil
 }
 
@@ -74,12 +96,7 @@ func (s *SiteService) GetByIDs(ids []int64) ([]models.SiteDisplay, error) {
 
 	var result []models.SiteDisplay
 	for _, swt := range sitesWithTags {
-		result = append(result, models.SiteDisplay{
-			Site:     swt.Site,
-			Tags:     swt.Tags,
-			Color:    utils.GenerateColorFromName(swt.Name),
-			Initials: utils.GetInitialsFromName(swt.Name),
-		})
+		result = append(result, buildSiteDisplay(swt, 0))
 	}
 	return result, nil
 }
@@ -151,13 +168,7 @@ func (s *SiteService) Search(query, category, sortBy string, page, pageSize int)
 
 	var result []models.SiteDisplay
 	for _, swt := range sites {
-		result = append(result, models.SiteDisplay{
-			Site:     swt.Site,
-			Tags:     swt.Tags,
-			Color:    utils.GenerateColorFromName(swt.Name),
-			Initials: utils.GetInitialsFromName(swt.Name),
-			TodayUV:  todayUVMap[swt.ID],
-		})
+		result = append(result, buildSiteDisplay(swt, todayUVMap[swt.ID]))
 	}
 	return result, total, nil
 }

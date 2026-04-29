@@ -223,3 +223,197 @@ func TestAdminSettingsTemplateUsesSharedFormAndFlash(t *testing.T) {
 		}
 	}
 }
+
+func TestIndexTemplateRendersDisplayTagClasses(t *testing.T) {
+	tmpl := web.BuildPageTemplates(os.DirFS("../templates"))["index.html"]
+
+	type DisplayTag struct {
+		Name  string
+		Class string
+	}
+	type SiteView struct {
+		ID          int64
+		Name        string
+		Description string
+		URL         string
+		Logo        string
+		Color       string
+		Initials    string
+		Tags        []string
+		DisplayTags []DisplayTag
+		TodayUV     int64
+		IsFav       bool
+	}
+
+	var out bytes.Buffer
+	err := tmpl.ExecuteTemplate(&out, "index.html", map[string]any{
+		"sites": []SiteView{{
+			ID:          1,
+			Name:        "Test Site",
+			Description: "desc",
+			URL:         "https://example.com",
+			Color:       "#123456",
+			Initials:    "TS",
+			DisplayTags: []DisplayTag{{
+				Name:  "AI对话",
+				Class: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+			}},
+		}},
+		"isLoggedIn": false,
+		"username":   "",
+	})
+	if err != nil {
+		t.Fatalf("ExecuteTemplate failed: %v", err)
+	}
+
+	html := out.String()
+	if !strings.Contains(html, "bg-emerald-50 text-emerald-700 border border-emerald-200") {
+		t.Fatalf("index.html did not render display tag class: %s", html)
+	}
+	if strings.Contains(html, "class=\"tag-badge ") {
+		t.Fatalf("index.html still rendered tag-badge class that overrides stable colors: %s", html)
+	}
+	if strings.Contains(html, "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800") {
+		t.Fatalf("index.html still rendered hard-coded blue tag class: %s", html)
+	}
+}
+
+func TestSearchResultsTemplateRendersDisplayTagClasses(t *testing.T) {
+	tmpl := web.BuildSharedTemplates(os.DirFS("../templates"))
+
+	type DisplayTag struct {
+		Name  string
+		Class string
+	}
+	type SiteView struct {
+		ID          int64
+		Name        string
+		Description string
+		URL         string
+		Logo        string
+		Color       string
+		Initials    string
+		Tags        []string
+		DisplayTags []DisplayTag
+		TodayUV     int64
+		IsFav       bool
+	}
+
+	var out bytes.Buffer
+	err := tmpl.ExecuteTemplate(&out, "partials/search-results.html", map[string]any{
+		"sites": []SiteView{{
+			ID:          1,
+			Name:        "Test Site",
+			Description: "desc",
+			URL:         "https://example.com",
+			Color:       "#123456",
+			Initials:    "TS",
+			DisplayTags: []DisplayTag{{Name: "AI对话", Class: "bg-rose-50 text-rose-700 border border-rose-200"}},
+		}},
+	})
+	if err != nil {
+		t.Fatalf("ExecuteTemplate failed: %v", err)
+	}
+
+	html := out.String()
+	if !strings.Contains(html, "bg-rose-50 text-rose-700 border border-rose-200") {
+		t.Fatalf("search-results did not render display tag class: %s", html)
+	}
+	if strings.Contains(html, "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800") {
+		t.Fatalf("search-results still rendered hard-coded blue tag class: %s", html)
+	}
+}
+
+func TestSiteDetailTemplateRendersDisplayTagClasses(t *testing.T) {
+	tmpl := web.BuildSharedTemplates(os.DirFS("../templates"))
+
+	type DisplayTag struct {
+		Name  string
+		Class string
+	}
+	type SiteView struct {
+		Name        string
+		Category    string
+		Description string
+		Rating      float64
+		Visits      int64
+		URL         string
+		Logo        string
+		Color       string
+		Initials    string
+		Tags        []string
+		DisplayTags []DisplayTag
+	}
+
+	var out bytes.Buffer
+	err := tmpl.ExecuteTemplate(&out, "partials/site-detail.html", map[string]any{
+		"site": SiteView{
+			Name:        "Test Site",
+			Category:    "AI",
+			Description: "desc",
+			Rating:      4.5,
+			Visits:      10,
+			DisplayTags: []DisplayTag{{Name: "AI对话", Class: "bg-violet-50 text-violet-700 border border-violet-200"}},
+		},
+		"stats": map[string]any{},
+	})
+	if err != nil {
+		t.Fatalf("ExecuteTemplate failed: %v", err)
+	}
+
+	html := out.String()
+	if !strings.Contains(html, "bg-violet-50 text-violet-700 border border-violet-200") {
+		t.Fatalf("site-detail did not render display tag class: %s", html)
+	}
+	if strings.Contains(html, "px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-sm") {
+		t.Fatalf("site-detail still rendered hard-coded blue tag class: %s", html)
+	}
+}
+
+func TestAdminSitesTemplateRendersDisplayTagClasses(t *testing.T) {
+	tmpl := web.BuildSharedTemplates(os.DirFS("../templates"))
+
+	type DisplayTag struct {
+		Name  string
+		Class string
+	}
+	type SiteView struct {
+		ID          int64
+		Name        string
+		Description string
+		URL         string
+		Logo        string
+		Color       string
+		Initials    string
+		Tags        []string
+		DisplayTags []DisplayTag
+	}
+
+	var out bytes.Buffer
+	err := tmpl.ExecuteTemplate(&out, "admin-sites.html", map[string]any{
+		"username":        "admin",
+		"adminSection":    "sites",
+		"pageTitle":       "站点管理",
+		"pageDescription": "管理站点内容。",
+		"sites": []SiteView{{
+			ID:          1,
+			Name:        "Test Site",
+			Description: "desc",
+			URL:         "https://example.com",
+			Color:       "#123456",
+			Initials:    "TS",
+			DisplayTags: []DisplayTag{{Name: "AI对话", Class: "bg-sky-50 text-sky-700 border border-sky-200"}},
+		}},
+	})
+	if err != nil {
+		t.Fatalf("ExecuteTemplate failed: %v", err)
+	}
+
+	html := out.String()
+	if !strings.Contains(html, "bg-sky-50 text-sky-700 border border-sky-200") {
+		t.Fatalf("admin-sites did not render display tag class: %s", html)
+	}
+	if strings.Contains(html, "class=\"admin-badge\"") {
+		t.Fatalf("admin-sites still rendered old admin badge markup: %s", html)
+	}
+}

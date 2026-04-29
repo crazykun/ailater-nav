@@ -5,6 +5,12 @@ import (
 	"testing"
 )
 
+type expectedTagPaletteClass struct {
+	bg     string
+	text   string
+	border string
+}
+
 func TestGenerateColorFromName(t *testing.T) {
 	color := GenerateColorFromName("ChatGPT")
 	if !strings.HasPrefix(color, "#") || len(color) != 7 {
@@ -66,5 +72,39 @@ func TestGetInitialsFromName_Chinese(t *testing.T) {
 	got = GetInitialsFromName("百度搜索引擎")
 	if got != "百度" {
 		t.Errorf("GetInitialsFromName(百度搜索引擎) = %q, want 百度", got)
+	}
+}
+
+func TestGetTagColorClass_ReturnsStablePaletteClass(t *testing.T) {
+	class1 := GetTagColorClass("AI对话")
+	class2 := GetTagColorClass("AI对话")
+	class3 := GetTagColorClass(" AI对话 ")
+
+	if class1 == "" {
+		t.Fatal("GetTagColorClass returned empty class")
+	}
+	if class1 != class2 {
+		t.Fatalf("same tag should map to same class: %q vs %q", class1, class2)
+	}
+	if class1 != class3 {
+		t.Fatalf("trimmed tag should map to same class: %q vs %q", class1, class3)
+	}
+
+	for _, needle := range []string{"bg-", "text-", "border-"} {
+		if !strings.Contains(class1, needle) {
+			t.Fatalf("tag class %q should contain %q", class1, needle)
+		}
+	}
+}
+
+func TestGetTagColorClass_EmptyTagFallsBackToDefault(t *testing.T) {
+	class := GetTagColorClass("   ")
+	if class == "" {
+		t.Fatal("empty tag should still return a default class")
+	}
+	for _, needle := range []string{"bg-", "text-", "border-"} {
+		if !strings.Contains(class, needle) {
+			t.Fatalf("default class %q should contain %q", class, needle)
+		}
 	}
 }
