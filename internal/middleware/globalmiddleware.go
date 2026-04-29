@@ -7,6 +7,8 @@ import (
 	"ai-later-nav/internal/services"
 	"net/http"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -134,13 +136,27 @@ func AddGlobalContext() gin.HandlerFunc {
 }
 
 func SetupRequired() gin.HandlerFunc {
-	userRepo := repository.NewUserRepository()
+	var (
+		userRepo     *repository.UserRepository
+		repoOnce     sync.Once
+		setupDone    atomic.Bool
+	)
+
 	return func(c *gin.Context) {
+		if setupDone.Load() {
+			c.Next()
+			return
+		}
+
 		path := c.Request.URL.Path
 		if strings.HasPrefix(path, "/static/") || path == "/setup" || path == "/api/setup" {
 			c.Next()
 			return
 		}
+
+		repoOnce.Do(func() {
+			userRepo = repository.NewUserRepository()
+		})
 
 		count, err := userRepo.CountUsers()
 		if err != nil {
@@ -154,6 +170,7 @@ func SetupRequired() gin.HandlerFunc {
 			return
 		}
 
+		setupDone.Store(true)
 		c.Next()
 	}
 }

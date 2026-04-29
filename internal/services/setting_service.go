@@ -12,7 +12,7 @@ var DefaultSettings = map[string]string{
 
 var (
 	settingInstance *SettingService
-	settingOnce    sync.Once
+	settingOnce     sync.Once
 )
 
 type SettingService struct {

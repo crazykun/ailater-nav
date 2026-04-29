@@ -13,16 +13,16 @@ import (
 )
 
 type AccessLogEntry struct {
-	Timestamp    string `json:"timestamp"`
-	ClientIP     string `json:"client_ip"`
-	Method       string `json:"method"`
-	Path         string `json:"path"`
-	StatusCode   int    `json:"status_code"`
-	Latency      string `json:"latency"`
-	UserAgent    string `json:"user_agent"`
-	Referer      string `json:"referer"`
-	RequestID    string `json:"request_id,omitempty"`
-	Username     string `json:"username,omitempty"`
+	Timestamp  string `json:"timestamp"`
+	ClientIP   string `json:"client_ip"`
+	Method     string `json:"method"`
+	Path       string `json:"path"`
+	StatusCode int    `json:"status_code"`
+	Latency    string `json:"latency"`
+	UserAgent  string `json:"user_agent"`
+	Referer    string `json:"referer"`
+	RequestID  string `json:"request_id,omitempty"`
+	Username   string `json:"username,omitempty"`
 }
 
 var accessLogger *json.Encoder

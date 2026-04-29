@@ -13,12 +13,12 @@ import (
 
 // AdminPageData contains common fields for all admin pages
 type AdminPageData struct {
-	Username   string
-	IsAdmin    bool
-	PageTitle  string
-	PageDesc   string
-	Section    string
-	SiteName   string
+	Username  string
+	IsAdmin   bool
+	PageTitle string
+	PageDesc  string
+	Section   string
+	SiteName  string
 }
 
 // getCommonAdminData returns common template data for admin pages
@@ -35,13 +35,13 @@ func getCommonAdminData(c *gin.Context, section, title, description string) gin.
 // AdminIndexData contains data specific to admin dashboard
 type AdminIndexData struct {
 	AdminPageData
-	SiteCount    int64
-	UserCount    int64
-	TodayUsers   int64
+	SiteCount      int64
+	UserCount      int64
+	TodayUsers     int64
 	DashboardStats *models.DashboardStats
-	TopSites     []models.Site
-	RecentUsers  []*models.User
-	CategoryStats []models.CategoryStat
+	TopSites       []models.Site
+	RecentUsers    []*models.User
+	CategoryStats  []models.CategoryStat
 }
 
 type AdminHandler struct {

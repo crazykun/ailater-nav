@@ -19,10 +19,10 @@ type Site struct {
 
 type SiteWithTags struct {
 	Site
-	Tags      []string `json:"tags"`
-	Color     string   `json:"color"`
-	Initials  string   `json:"initials"`
-	IsFav     bool     `json:"is_fav"`
+	Tags     []string `json:"tags"`
+	Color    string   `json:"color"`
+	Initials string   `json:"initials"`
+	IsFav    bool     `json:"is_fav"`
 }
 
 type SiteDisplay struct {
@@ -35,22 +35,22 @@ type SiteDisplay struct {
 }
 
 type SiteStats struct {
-	SiteID    int64 `json:"site_id" db:"site_id"`
-	PV        int64 `json:"pv" db:"pv"`
-	UV        int64 `json:"uv" db:"uv"`
-	TodayPV   int64 `json:"today_pv" db:"today_pv"`
-	TodayUV   int64 `json:"today_uv" db:"today_uv"`
-	WeekPV    int64 `json:"week_pv" db:"week_pv"`
-	WeekUV    int64 `json:"week_uv" db:"week_uv"`
+	SiteID  int64 `json:"site_id" db:"site_id"`
+	PV      int64 `json:"pv" db:"pv"`
+	UV      int64 `json:"uv" db:"uv"`
+	TodayPV int64 `json:"today_pv" db:"today_pv"`
+	TodayUV int64 `json:"today_uv" db:"today_uv"`
+	WeekPV  int64 `json:"week_pv" db:"week_pv"`
+	WeekUV  int64 `json:"week_uv" db:"week_uv"`
 }
 
 type DashboardStats struct {
-	TotalVisits  int64 `json:"total_visits"`
-	TodayVisits  int64 `json:"today_visits"`
-	WeekVisits   int64 `json:"week_visits"`
+	TotalVisits   int64 `json:"total_visits"`
+	TodayVisits   int64 `json:"today_visits"`
+	WeekVisits    int64 `json:"week_visits"`
 	FeaturedCount int64 `json:"featured_count"`
 	CategoryCount int64 `json:"category_count"`
-	TagCount     int64 `json:"tag_count"`
+	TagCount      int64 `json:"tag_count"`
 }
 
 type CategoryStat struct {

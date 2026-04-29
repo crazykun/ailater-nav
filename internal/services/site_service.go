@@ -67,20 +67,18 @@ func (s *SiteService) GetByID(id int64) (*models.SiteWithTags, error) {
 }
 
 func (s *SiteService) GetByIDs(ids []int64) ([]models.SiteDisplay, error) {
+	sitesWithTags, err := s.siteRepo.GetByIDsWithTags(ids)
+	if err != nil {
+		return nil, err
+	}
+
 	var result []models.SiteDisplay
-	for _, id := range ids {
-		site, err := s.GetByID(id)
-		if err != nil {
-			continue
-		}
-		if site == nil {
-			continue
-		}
+	for _, swt := range sitesWithTags {
 		result = append(result, models.SiteDisplay{
-			Site:     site.Site,
-			Tags:     site.Tags,
-			Color:    site.Color,
-			Initials: site.Initials,
+			Site:     swt.Site,
+			Tags:     swt.Tags,
+			Color:    utils.GenerateColorFromName(swt.Name),
+			Initials: utils.GetInitialsFromName(swt.Name),
 		})
 	}
 	return result, nil

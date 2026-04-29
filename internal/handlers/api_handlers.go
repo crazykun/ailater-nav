@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"ai-later-nav/internal/middleware"
 	"ai-later-nav/internal/models"
 	"ai-later-nav/internal/services"
 	"log"
@@ -165,7 +166,7 @@ func (h *APIHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := generateToken(user)
+	token, err := middleware.GenerateToken(user)
 	if err != nil {
 		c.HTML(http.StatusOK, "partials/login-form.html", gin.H{
 			"error": "登录失败，请重试",
@@ -216,7 +217,7 @@ func (h *APIHandler) Register(c *gin.Context) {
 		return
 	}
 
-	token, err := generateToken(user)
+	token, err := middleware.GenerateToken(user)
 	if err != nil {
 		c.HTML(http.StatusOK, "partials/register-form.html", gin.H{
 			"error": "注册成功，请登录",
@@ -329,7 +330,7 @@ func (h *APIHandler) Setup(c *gin.Context) {
 
 	services.GetSettingService().SeedDefaults()
 
-	token, err := generateToken(user)
+	token, err := middleware.GenerateToken(user)
 	if err != nil {
 		c.HTML(http.StatusOK, "partials/setup-form.html", gin.H{
 			"error": "创建成功，请登录",

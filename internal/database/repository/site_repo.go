@@ -62,6 +62,73 @@ func (r *SiteRepository) GetByID(id int64) (*models.Site, error) {
 	return &s, nil
 }
 
+// GetByIDs 批量获取多个站点，避免 N+1 查询
+func (r *SiteRepository) GetByIDs(ids []int64) ([]models.Site, error) {
+	if len(ids) == 0 {
+		return []models.Site{}, nil
+	}
+
+	placeholders := make([]string, len(ids))
+	args := make([]interface{}, len(ids))
+	for i, id := range ids {
+		placeholders[i] = "?"
+		args[i] = id
+	}
+
+	query := fmt.Sprintf(`
+		SELECT id, name, url, description, logo, category, rating, visits, featured, deleted, created_at, updated_at
+		FROM sites WHERE id IN (%s)
+	`, strings.Join(placeholders, ","))
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("query sites by ids: %w", err)
+	}
+	defer rows.Close()
+
+	var sites []models.Site
+	for rows.Next() {
+		var s models.Site
+		if err := rows.Scan(&s.ID, &s.Name, &s.URL, &s.Description, &s.Logo,
+			&s.Category, &s.Rating, &s.Visits, &s.Featured, &s.Deleted,
+			&s.CreatedAt, &s.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scan site: %w", err)
+		}
+		sites = append(sites, s)
+	}
+	return sites, rows.Err()
+}
+
+// GetByIDsWithTags 批量获取多个站点及其标签
+func (r *SiteRepository) GetByIDsWithTags(ids []int64) ([]models.SiteWithTags, error) {
+	sites, err := r.GetByIDs(ids)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(sites) == 0 {
+		return []models.SiteWithTags{}, nil
+	}
+
+	siteIDs := make([]int64, len(sites))
+	for i, s := range sites {
+		siteIDs[i] = s.ID
+	}
+	tagsMap, err := r.GetTagsBatch(siteIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []models.SiteWithTags
+	for _, s := range sites {
+		result = append(result, models.SiteWithTags{
+			Site: s,
+			Tags: tagsMap[s.ID],
+		})
+	}
+	return result, nil
+}
+
 func (r *SiteRepository) GetByName(name string) (*models.Site, error) {
 	var s models.Site
 	err := r.db.QueryRow(`
@@ -253,6 +320,54 @@ func (r *SiteRepository) GetTags(siteID int64) ([]string, error) {
 	return tags, rows.Err()
 }
 
+// GetTagsBatch 批量获取多个站点的标签，避免 N+1 查询
+func (r *SiteRepository) GetTagsBatch(siteIDs []int64) (map[int64][]string, error) {
+	if len(siteIDs) == 0 {
+		return make(map[int64][]string), nil
+	}
+
+	// 构建 IN 子句的占位符
+	placeholders := make([]string, len(siteIDs))
+	args := make([]interface{}, len(siteIDs))
+	for i, id := range siteIDs {
+		placeholders[i] = "?"
+		args[i] = id
+	}
+
+	query := fmt.Sprintf(`
+		SELECT st.site_id, t.name
+		FROM site_tags st
+		JOIN tags t ON st.tag_id = t.id
+		WHERE st.site_id IN (%s)
+		ORDER BY st.site_id, t.name
+	`, strings.Join(placeholders, ","))
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("query tags batch: %w", err)
+	}
+	defer rows.Close()
+
+	result := make(map[int64][]string)
+	for rows.Next() {
+		var siteID int64
+		var tagName string
+		if err := rows.Scan(&siteID, &tagName); err != nil {
+			return nil, fmt.Errorf("scan tag batch: %w", err)
+		}
+		result[siteID] = append(result[siteID], tagName)
+	}
+
+	// 确保所有站点都有条目（即使没有标签）
+	for _, siteID := range siteIDs {
+		if _, exists := result[siteID]; !exists {
+			result[siteID] = []string{}
+		}
+	}
+
+	return result, rows.Err()
+}
+
 func (r *SiteRepository) SetTags(siteID int64, tagNames []string) error {
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -291,12 +406,20 @@ func (r *SiteRepository) SetTags(siteID int64, tagNames []string) error {
 }
 
 func (r *SiteRepository) IncrementVisits(siteID int64, ip string, userID *int64) error {
-	_, err := r.db.Exec("UPDATE sites SET visits = visits + 1 WHERE id = ?", siteID)
+	tx, err := r.db.Begin()
 	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.Exec("UPDATE sites SET visits = visits + 1 WHERE id = ?", siteID); err != nil {
 		return fmt.Errorf("increment visits: %w", err)
 	}
-	_, err = r.db.Exec("INSERT INTO visits (site_id, ip, user_id) VALUES (?, ?, ?)", siteID, ip, userID)
-	return err
+	if _, err := tx.Exec("INSERT INTO visits (site_id, ip, user_id) VALUES (?, ?, ?)", siteID, ip, userID); err != nil {
+		return fmt.Errorf("insert visit record: %w", err)
+	}
+
+	return tx.Commit()
 }
 
 func (r *SiteRepository) GetSiteStats(siteID int64) (*models.SiteStats, error) {
@@ -398,15 +521,25 @@ func (r *SiteRepository) GetAllWithTags() ([]models.SiteWithTags, error) {
 		return nil, err
 	}
 
+	if len(sites) == 0 {
+		return []models.SiteWithTags{}, nil
+	}
+
+	// 批量获取所有站点的标签
+	siteIDs := make([]int64, len(sites))
+	for i, s := range sites {
+		siteIDs[i] = s.ID
+	}
+	tagsMap, err := r.GetTagsBatch(siteIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	var result []models.SiteWithTags
 	for _, s := range sites {
-		tags, err := r.GetTags(s.ID)
-		if err != nil {
-			return nil, err
-		}
 		result = append(result, models.SiteWithTags{
 			Site: s,
-			Tags: tags,
+			Tags: tagsMap[s.ID],
 		})
 	}
 	return result, nil
@@ -418,15 +551,25 @@ func (r *SiteRepository) SearchWithTags(query, category, sortBy string, limit, o
 		return nil, 0, err
 	}
 
+	if len(sites) == 0 {
+		return []models.SiteWithTags{}, total, nil
+	}
+
+	// 批量获取标签
+	siteIDs := make([]int64, len(sites))
+	for i, s := range sites {
+		siteIDs[i] = s.ID
+	}
+	tagsMap, err := r.GetTagsBatch(siteIDs)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	var result []models.SiteWithTags
 	for _, s := range sites {
-		tags, err := r.GetTags(s.ID)
-		if err != nil {
-			return nil, 0, err
-		}
 		result = append(result, models.SiteWithTags{
 			Site: s,
-			Tags: tags,
+			Tags: tagsMap[s.ID],
 		})
 	}
 	return result, total, nil
